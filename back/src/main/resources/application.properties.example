@@ -1,0 +1,17 @@
+# Configuration MySQL
+spring.datasource.url=jdbc:mysql://localhost:3306/nom_db?useSSL=false&serverTimezone=UTC
+spring.datasource.username=votre_nom_utilisateur
+spring.datasource.password=votre_mot_de_passe
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# Configuration Hibernate - Dialecte compatible avec Spring Boot 3
+spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+spring.jpa.hibernate.ddl-auto=update
+
+# Logging SQL pour voir les requêtes
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+# Configuration JWT
+jwt.secret=votre_cle_secrete_jwt_tres_longue_et_complexe
+jwt.expiration=86400000 

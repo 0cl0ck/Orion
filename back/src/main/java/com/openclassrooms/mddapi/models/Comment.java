@@ -1,6 +1,6 @@
 package com.openclassrooms.mddapi.models;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
