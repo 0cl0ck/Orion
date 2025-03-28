@@ -1,10 +1,12 @@
 package com.openclassrooms.mddapi.controllers;
 
 import com.openclassrooms.mddapi.dto.MessageResponse;
-import com.openclassrooms.mddapi.models.User;
+import com.openclassrooms.mddapi.dto.UserRequest;
+import com.openclassrooms.mddapi.dto.UserResponse;
 import com.openclassrooms.mddapi.security.services.UserDetailsImpl;
 import com.openclassrooms.mddapi.services.UserService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +34,7 @@ public class UserController {
      * @return Liste de tous les utilisateurs
      */
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
@@ -42,7 +44,7 @@ public class UserController {
      * @return Utilisateur trouvé
      */
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         try {
             return ResponseEntity.ok(userService.getUserById(id));
         } catch (EntityNotFoundException e) {
@@ -56,7 +58,7 @@ public class UserController {
      * @return Utilisateur trouvé
      */
     @GetMapping("/username/{username}")
-    public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
+    public ResponseEntity<UserResponse> getUserByUsername(@PathVariable String username) {
         try {
             return ResponseEntity.ok(userService.getUserByUsername(username));
         } catch (EntityNotFoundException e) {
@@ -67,18 +69,18 @@ public class UserController {
     /**
      * Met à jour les informations d'un utilisateur
      * @param id Identifiant de l'utilisateur à mettre à jour
-     * @param userData Données mises à jour de l'utilisateur
+     * @param userRequest DTO contenant les données mises à jour
      * @param userDetails Détails de l'utilisateur authentifié
      * @return Utilisateur mis à jour
      */
     @PutMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<User> updateUser(
+    public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
-            @RequestBody User userData,
+            @Valid @RequestBody UserRequest userRequest,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         try {
-            return ResponseEntity.ok(userService.updateUser(id, userData, userDetails.getId()));
+            return ResponseEntity.ok(userService.updateUser(id, userRequest, userDetails.getId()));
         } catch (EntityNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (AccessDeniedException e) {
@@ -136,7 +138,7 @@ public class UserController {
      */
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<User> getCurrentUser(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         try {
             return ResponseEntity.ok(userService.getUserById(userDetails.getId()));
         } catch (EntityNotFoundException e) {

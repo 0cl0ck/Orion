@@ -1,11 +1,15 @@
 package com.openclassrooms.mddapi.controllers;
 
-import com.openclassrooms.mddapi.models.Theme;
+import com.openclassrooms.mddapi.dto.ThemeRequest;
+import com.openclassrooms.mddapi.dto.ThemeResponse;
 import com.openclassrooms.mddapi.services.ThemeService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -18,41 +22,59 @@ public class ThemeController {
     private ThemeService themeService;
 
     @GetMapping
-    public ResponseEntity<List<Theme>> getAllThemes() {
-        List<Theme> themes = themeService.getAllThemes();
+    public ResponseEntity<List<ThemeResponse>> getAllThemes() {
+        List<ThemeResponse> themes = themeService.getAllThemes();
         return new ResponseEntity<>(themes, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Theme> getThemeById(@PathVariable Long id) {
-        return themeService.getThemeById(id)
-                .map(theme -> new ResponseEntity<>(theme, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    public ResponseEntity<ThemeResponse> getThemeById(@PathVariable Long id) {
+        try {
+            ThemeResponse theme = themeService.getThemeById(id);
+            return new ResponseEntity<>(theme, HttpStatus.OK);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Thème non trouvé avec l'id: " + id, e);
+        }
     }
 
     @PostMapping
-    public ResponseEntity<Theme> createTheme(@RequestBody Theme theme) {
-        Theme createdTheme = themeService.createTheme(theme);
-        return new ResponseEntity<>(createdTheme, HttpStatus.CREATED);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ThemeResponse> createTheme(@Valid @RequestBody ThemeRequest themeRequest) {
+        try {
+            ThemeResponse createdTheme = themeService.createTheme(themeRequest);
+            return new ResponseEntity<>(createdTheme, HttpStatus.CREATED);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Erreur lors de la création du thème: " + e.getMessage(), e);
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Theme> updateTheme(@PathVariable Long id, @RequestBody Theme theme) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ThemeResponse> updateTheme(@PathVariable Long id, @Valid @RequestBody ThemeRequest themeRequest) {
         try {
-            Theme updatedTheme = themeService.updateTheme(id, theme);
+            ThemeResponse updatedTheme = themeService.updateTheme(id, themeRequest);
             return new ResponseEntity<>(updatedTheme, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            throw new ResponseStatusException(
+                    e.getClass().getSimpleName().equals("EntityNotFoundException") ? 
+                    HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST, 
+                    e.getMessage(), e
+            );
         }
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteTheme(@PathVariable Long id) {
         try {
             themeService.deleteTheme(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            throw new ResponseStatusException(
+                    e.getClass().getSimpleName().equals("EntityNotFoundException") ? 
+                    HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST, 
+                    e.getMessage(), e
+            );
         }
     }
-} 
+}

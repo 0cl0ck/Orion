@@ -1,5 +1,7 @@
 package com.openclassrooms.mddapi.services;
 
+import com.openclassrooms.mddapi.dto.UserRequest;
+import com.openclassrooms.mddapi.dto.UserResponse;
 import com.openclassrooms.mddapi.models.User;
 import com.openclassrooms.mddapi.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -12,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service pour la gestion des utilisateurs
@@ -27,56 +30,62 @@ public class UserService {
 
     /**
      * Récupère tous les utilisateurs
-     * @return Liste de tous les utilisateurs
+     * @return Liste de tous les utilisateurs transformés en DTO de réponse
      */
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserResponse> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::mapToUserResponse)
+                .collect(Collectors.toList());
     }
 
     /**
      * Récupère un utilisateur par son ID
      * @param id Identifiant de l'utilisateur
-     * @return Utilisateur trouvé
+     * @return DTO de réponse contenant les données de l'utilisateur
      * @throws EntityNotFoundException si l'utilisateur n'existe pas
      */
-    public User getUserById(Long id) {
-        return userRepository.findById(id)
+    public UserResponse getUserById(Long id) {
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec l'id : " + id));
+        return mapToUserResponse(user);
     }
 
     /**
      * Récupère un utilisateur par son nom d'utilisateur
      * @param username Nom d'utilisateur
-     * @return Utilisateur trouvé
+     * @return DTO de réponse contenant les données de l'utilisateur
      * @throws EntityNotFoundException si l'utilisateur n'existe pas
      */
-    public User getUserByUsername(String username) {
-        return userRepository.findByUsername(username)
+    public UserResponse getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec le nom d'utilisateur : " + username));
+        return mapToUserResponse(user);
     }
 
     /**
      * Récupère un utilisateur par son email
      * @param email Email de l'utilisateur
-     * @return Utilisateur trouvé
+     * @return DTO de réponse contenant les données de l'utilisateur
      * @throws EntityNotFoundException si l'utilisateur n'existe pas
      */
-    public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
+    public UserResponse getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec l'email : " + email));
+        return mapToUserResponse(user);
     }
 
     /**
      * Met à jour les informations d'un utilisateur
      * @param id Identifiant de l'utilisateur à mettre à jour
-     * @param userData Données mises à jour de l'utilisateur
+     * @param userRequest DTO contenant les données mises à jour
      * @param currentUserId Identifiant de l'utilisateur effectuant la mise à jour
-     * @return Utilisateur mis à jour
+     * @return DTO de réponse contenant les données de l'utilisateur mis à jour
      * @throws EntityNotFoundException si l'utilisateur n'existe pas
      * @throws AccessDeniedException si l'utilisateur essaie de modifier un autre utilisateur
      */
     @Transactional
-    public User updateUser(Long id, User userData, Long currentUserId) {
+    public UserResponse updateUser(Long id, UserRequest userRequest, Long currentUserId) {
         // Vérifier si l'utilisateur essaie de modifier un autre compte que le sien
         if (!id.equals(currentUserId)) {
             throw new AccessDeniedException("Vous n'êtes pas autorisé à modifier cet utilisateur");
@@ -86,32 +95,33 @@ public class UserService {
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec l'id : " + id));
 
         // Mettre à jour les champs modifiables
-        if (userData.getUsername() != null && !userData.getUsername().isEmpty()) {
+        if (userRequest.getUsername() != null && !userRequest.getUsername().isEmpty()) {
             // Vérifier si le nouveau nom d'utilisateur existe déjà (sauf s'il s'agit du même utilisateur)
-            Optional<User> existingUser = userRepository.findByUsername(userData.getUsername());
+            Optional<User> existingUser = userRepository.findByUsername(userRequest.getUsername());
             if (existingUser.isPresent() && !existingUser.get().getId().equals(id)) {
                 throw new IllegalArgumentException("Ce nom d'utilisateur est déjà utilisé");
             }
-            user.setUsername(userData.getUsername());
+            user.setUsername(userRequest.getUsername());
         }
 
-        if (userData.getEmail() != null && !userData.getEmail().isEmpty()) {
+        if (userRequest.getEmail() != null && !userRequest.getEmail().isEmpty()) {
             // Vérifier si le nouvel email existe déjà (sauf s'il s'agit du même utilisateur)
-            Optional<User> existingUser = userRepository.findByEmail(userData.getEmail());
+            Optional<User> existingUser = userRepository.findByEmail(userRequest.getEmail());
             if (existingUser.isPresent() && !existingUser.get().getId().equals(id)) {
                 throw new IllegalArgumentException("Cet email est déjà utilisé");
             }
-            user.setEmail(userData.getEmail());
+            user.setEmail(userRequest.getEmail());
         }
 
         // Si un nouveau mot de passe est fourni, le hasher
-        if (userData.getPassword() != null && !userData.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(userData.getPassword()));
+        if (userRequest.getPassword() != null && !userRequest.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         }
 
         user.setUpdatedAt(LocalDateTime.now());
         
-        return userRepository.save(user);
+        User updatedUser = userRepository.save(user);
+        return mapToUserResponse(updatedUser);
     }
 
     /**
@@ -150,5 +160,22 @@ public class UserService {
      */
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
+    }
+    
+    /**
+     * Transforme une entité User en DTO de réponse
+     * @param user Entité User à transformer
+     * @return DTO de réponse contenant les données de l'utilisateur
+     */
+    private UserResponse mapToUserResponse(User user) {
+        return UserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .articleCount(user.getArticles() != null ? user.getArticles().size() : 0)
+                .commentCount(user.getComments() != null ? user.getComments().size() : 0)
+                .build();
     }
 }
