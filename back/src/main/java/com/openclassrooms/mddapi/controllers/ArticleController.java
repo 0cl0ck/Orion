@@ -5,6 +5,12 @@ import com.openclassrooms.mddapi.dto.ArticleResponse;
 import com.openclassrooms.mddapi.dto.MessageResponse;
 import com.openclassrooms.mddapi.security.services.UserDetailsImpl;
 import com.openclassrooms.mddapi.services.ArticleService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +29,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/articles")
 @CrossOrigin(origins = "*", maxAge = 3600)
+@Tag(name = "Articles", description = "API de gestion des articles")
 public class ArticleController {
 
     @Autowired
@@ -32,6 +39,11 @@ public class ArticleController {
      * Récupère tous les articles
      * @return Liste des articles
      */
+    @Operation(summary = "Récupérer tous les articles", description = "Retourne la liste de tous les articles disponibles")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Liste des articles récupérée avec succès",
+                    content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ArticleResponse.class)) })
+    })
     @GetMapping
     public ResponseEntity<List<ArticleResponse>> getAllArticles() {
         return ResponseEntity.ok(articleService.getAllArticles());
@@ -42,6 +54,12 @@ public class ArticleController {
      * @param id Identifiant de l'article
      * @return Article trouvé
      */
+    @Operation(summary = "Récupérer un article par ID", description = "Retourne un article en fonction de son ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Article trouvé",
+                    content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ArticleResponse.class)) }),
+            @ApiResponse(responseCode = "404", description = "Article non trouvé", content = @Content)
+    })
     @GetMapping("/{id}")
     public ResponseEntity<ArticleResponse> getArticleById(@PathVariable Long id) {
         try {
@@ -56,6 +74,12 @@ public class ArticleController {
      * @param themeId Identifiant du thème
      * @return Liste des articles du thème
      */
+    @Operation(summary = "Récupérer les articles d'un thème", description = "Retourne la liste des articles d'un thème spécifique")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Liste des articles récupérée avec succès",
+                    content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ArticleResponse.class)) }),
+            @ApiResponse(responseCode = "404", description = "Thème non trouvé", content = @Content)
+    })
     @GetMapping("/theme/{themeId}")
     public ResponseEntity<List<ArticleResponse>> getArticlesByTheme(@PathVariable Long themeId) {
         try {
@@ -70,6 +94,12 @@ public class ArticleController {
      * @param userId Identifiant de l'utilisateur
      * @return Liste des articles de l'utilisateur
      */
+    @Operation(summary = "Récupérer les articles d'un utilisateur", description = "Retourne la liste des articles d'un utilisateur spécifique")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Liste des articles récupérée avec succès",
+                    content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ArticleResponse.class)) }),
+            @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé", content = @Content)
+    })
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<ArticleResponse>> getArticlesByUser(@PathVariable Long userId) {
         try {
@@ -84,6 +114,11 @@ public class ArticleController {
      * @param title Titre à rechercher
      * @return Liste des articles correspondants
      */
+    @Operation(summary = "Rechercher des articles par titre", description = "Retourne la liste des articles dont le titre correspond à la recherche")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Liste des articles récupérée avec succès",
+                    content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ArticleResponse.class)) })
+    })
     @GetMapping("/search")
     public ResponseEntity<List<ArticleResponse>> searchArticlesByTitle(@RequestParam String title) {
         return ResponseEntity.ok(articleService.searchArticlesByTitle(title));
@@ -95,6 +130,13 @@ public class ArticleController {
      * @param userDetails Détails de l'utilisateur authentifié
      * @return Article créé
      */
+    @Operation(summary = "Créer un nouvel article", description = "Crée un nouvel article avec les données fournies")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Article créé avec succès",
+                    content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ArticleResponse.class)) }),
+            @ApiResponse(responseCode = "400", description = "Données invalides", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Accès refusé", content = @Content)
+    })
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ArticleResponse> createArticle(
@@ -115,6 +157,14 @@ public class ArticleController {
      * @param userDetails Détails de l'utilisateur authentifié
      * @return Article mis à jour
      */
+    @Operation(summary = "Mettre à jour un article", description = "Met à jour les données d'un article existant")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Article mis à jour avec succès",
+                    content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ArticleResponse.class)) }),
+            @ApiResponse(responseCode = "404", description = "Article non trouvé", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Données invalides", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Accès refusé", content = @Content)
+    })
     @PutMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ArticleResponse> updateArticle(
@@ -136,6 +186,12 @@ public class ArticleController {
      * @param userDetails Détails de l'utilisateur authentifié
      * @return Message de confirmation
      */
+    @Operation(summary = "Supprimer un article", description = "Supprime un article en fonction de son ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Article supprimé avec succès", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Article non trouvé", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Accès refusé", content = @Content)
+    })
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<MessageResponse> deleteArticle(

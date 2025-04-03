@@ -62,6 +62,11 @@ public class WebSecurityConfig {
                 auth.requestMatchers("/api/auth/login").permitAll()
                     .requestMatchers("/api/auth/register").permitAll()
                     .requestMatchers("/api/test/public").permitAll()
+                    // Autoriser l'accès à Swagger UI et OpenAPI sans authentification
+                    .requestMatchers("/swagger-ui/**").permitAll()
+                    .requestMatchers("/swagger-ui.html").permitAll()
+                    .requestMatchers("/v3/api-docs/**").permitAll()
+                    .requestMatchers("/api-docs/**").permitAll()
                     .anyRequest().authenticated()
             );
         
@@ -70,4 +75,4 @@ public class WebSecurityConfig {
         
         return http.build();
     }
-} 
+}
