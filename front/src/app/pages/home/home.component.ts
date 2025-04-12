@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -6,11 +7,16 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent implements OnInit {
-  constructor() {}
+  constructor(private router: Router) {}
 
   ngOnInit(): void {}
 
-  start() {
-    alert('Commencez par lire le README et à vous de jouer !');
+  /**
+   * Navigue vers la page spécifiée
+   * @param route La route à laquelle naviguer ('login' ou 'register')
+   */
+  navigateTo(route: string): void {
+    // Navigation vers la page spécifiée
+    this.router.navigate([route]);
   }
 }

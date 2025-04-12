@@ -1,4 +1,31 @@
 /* You can add global styles to this file, and also import other style files */
 
+/* Variables de couleurs basées sur la maquette Figma */
+:root {
+  --primary-color: #7763C5;
+  --primary-light: #9584D9;
+  --primary-dark: #6C5CCF;
+  --background-color: #F5F5F5;
+  --text-color: #333333;
+  --error-color: #A40F0F;
+}
+
+/* Styles globaux */
 html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body { 
+  margin: 0; 
+  font-family: Roboto, "Helvetica Neue", sans-serif; 
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* Personnalisation des boutons Material */
+.mat-raised-button.mat-primary {
+  background-color: var(--primary-color);
+}
+
+.mat-raised-button:not(.mat-primary) {
+  background-color: white;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}

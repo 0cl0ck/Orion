@@ -1,0 +1,58 @@
+<div class="login-container">
+  <!-- Header with logo - Visible only on desktop -->
+  <div class="header desktop-only">
+    <div class="logo-container">
+      <img src="/assets/logo_p6.png" alt="logo" class="logo" />
+    </div>
+  </div>
+
+  <!-- Separator line - Visible only on desktop -->
+  <div class="separator desktop-only"></div>
+  
+  <!-- Main content -->
+  <div class="content">
+    <!-- Mobile back button - Separate from title -->
+    <button mat-icon-button (click)="goBack()" class="back-button mobile-only" aria-label="Retour">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+
+    <!-- Mobile logo - Visible only on mobile -->
+    <div class="logo-container mobile-only">
+      <img src="/assets/logo_p6.png" alt="logo" class="logo" />
+    </div>
+
+    <!-- Desktop back button - Top left -->
+    <button mat-icon-button (click)="goBack()" class="back-button desktop-only desktop-back" aria-label="Retour">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+
+    <!-- Desktop title - Centered -->
+    <h1 class="page-title desktop-only desktop-title">Se connecter</h1>
+
+    <!-- Mobile title - Centered -->
+    <h1 class="page-title mobile-only">Se connecter</h1>
+    
+    <!-- Login form -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Email ou nom d'utilisateur</mat-label>
+        <input matInput formControlName="username" required>
+        <mat-error *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
+          Email ou nom d'utilisateur requis
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Mot de passe</mat-label>
+        <input matInput type="password" formControlName="password" required>
+        <mat-error *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+          Mot de passe requis
+        </mat-error>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" type="submit" class="submit-button">
+        Se connecter
+      </button>
+    </form>
+  </div>
+</div>
