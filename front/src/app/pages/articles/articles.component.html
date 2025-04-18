@@ -1,0 +1,50 @@
+<div class="articles-page">
+  <!-- Header -->
+  <header class="app-header">
+    <div class="left-section">
+      <div class="logo-container">
+        <img src="/assets/logo_p6.png" alt="MDD Logo" class="logo" />
+      </div>
+    </div>
+    <div class="right-section">
+      <a href="javascript:void(0)" class="logout-link" (click)="logout()">Se déconnecter</a>
+      <div class="nav-links">
+        <a href="javascript:void(0)" class="active">Articles</a>
+        <a href="javascript:void(0)" (click)="navigateToThemes()">Thèmes</a>
+      </div>
+      <button mat-icon-button class="user-profile-btn" (click)="navigateToProfile()">
+        <img src="/assets/profile_placeholder.jpg" alt="Profil" class="avatar-img" onerror="this.src='assets/default-avatar.png'" />
+      </button>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="main-content">
+    <div class="content-header">
+      <button mat-raised-button class="create-button" (click)="createNewArticle()">
+        Créer un article
+      </button>
+      <div class="sort-by">
+        <span>Trier par</span>
+        <button mat-icon-button class="sort-direction" (click)="toggleSortDirection()">
+          <mat-icon>arrow_downward</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Articles list -->
+    <div class="articles-list">
+      <!-- Article card template - to be repeated for each article -->
+      <div class="article-card" *ngFor="let article of articles" (click)="navigateToArticleDetail(article.id)">
+        <h2 class="article-title">{{ article.title }}</h2>
+        <div class="article-meta">
+          <div class="article-date">{{ article.date | date:'dd/MM/yyyy' }}</div>
+          <div class="article-author">{{ article.author }}</div>
+        </div>
+        <div class="article-content">
+          {{ article.content }}
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
