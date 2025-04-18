@@ -32,17 +32,34 @@
       </div>
     </div>
 
+    <!-- Indications de chargement et d'erreur -->
+    <div class="status-messages">
+      <div *ngIf="loading" class="loading-message">
+        Chargement des articles...
+      </div>
+      <div *ngIf="error" class="error-message">
+        {{ error }}
+      </div>
+    </div>
+
     <!-- Articles list -->
-    <div class="articles-list">
+    <div class="articles-list" *ngIf="!loading && !error">
+      <div *ngIf="articles.length === 0" class="no-articles">
+        Aucun article disponible pour le moment.
+      </div>
       <!-- Article card template - to be repeated for each article -->
       <div class="article-card" *ngFor="let article of articles" (click)="navigateToArticleDetail(article.id)">
         <h2 class="article-title">{{ article.title }}</h2>
         <div class="article-meta">
-          <div class="article-date">{{ article.date | date:'dd/MM/yyyy' }}</div>
-          <div class="article-author">{{ article.author }}</div>
+          <div class="article-date">{{ article.createdAt | date:'dd/MM/yyyy' }}</div>
+          <div class="article-author">{{ article.authorUsername }}</div>
         </div>
+        <div *ngIf="article.themeName" class="article-theme">{{ article.themeName }}</div>
         <div class="article-content">
           {{ article.content }}
+        </div>
+        <div class="article-comments" *ngIf="article.commentCount > 0">
+          <mat-icon>comment</mat-icon> {{ article.commentCount }} commentaire(s)
         </div>
       </div>
     </div>

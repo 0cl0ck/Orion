@@ -1,14 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { TokenStorageService } from '../../services/token-storage.service';
+import { ArticleService } from '../../services/article.service';
+import { Article } from '../../models/article.model';
 
-interface Article {
-  id: number;
-  title: string;
-  content: string;
-  date: Date;
-  author: string;
-}
+// L'interface a été déplacée dans son propre fichier modèle
 
 @Component({
   selector: 'app-articles',
@@ -16,56 +12,54 @@ interface Article {
   styleUrls: ['./articles.component.scss']
 })
 export class ArticlesComponent implements OnInit {
-  // Mock articles data
-  articles: Article[] = [
-    {
-      id: 1,
-      title: 'Titre de l\'article',
-      content: 'Content: lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled...',
-      date: new Date(),
-      author: 'Auteur'
-    },
-    {
-      id: 2,
-      title: 'Titre de l\'article',
-      content: 'Content: lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled...',
-      date: new Date(Date.now() - 86400000), // Yesterday
-      author: 'Auteur'
-    },
-    {
-      id: 3,
-      title: 'Titre de l\'article',
-      content: 'Content: lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled...',
-      date: new Date(Date.now() - 2 * 86400000), // 2 days ago
-      author: 'Auteur'
-    },
-    {
-      id: 4,
-      title: 'Titre de l\'article',
-      content: 'Content: lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled...',
-      date: new Date(Date.now() - 3 * 86400000), // 3 days ago
-      author: 'Auteur'
-    }
-  ];
+  articles: Article[] = [];
+  loading = false;
+  error = '';
+  userSubscriptions: number[] = [];
 
   sortOrder: 'newest' | 'oldest' = 'newest'; // Default sort order
   currentUser: any = null;
 
   constructor(
     private router: Router,
-    private tokenStorage: TokenStorageService
+    private tokenStorage: TokenStorageService,
+    private articleService: ArticleService
   ) { }
 
   ngOnInit(): void {
     this.currentUser = this.tokenStorage.getUser();
-    this.sortArticles();
+    this.loadArticles();
   }
 
+  /**
+   * Charge tous les articles depuis l'API
+   */
+  loadArticles() {
+    this.loading = true;
+    this.error = '';
+    
+    this.articleService.getAllArticles().subscribe({
+      next: (data) => {
+        this.articles = data;
+        this.sortArticles();
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = 'Erreur lors du chargement des articles: ' + (err.error?.message || err.message);
+        this.loading = false;
+        console.error('Erreur:', err);
+      }
+    });
+  }
+  
+  /**
+   * Trie les articles par date
+   */
   sortArticles() {
     if (this.sortOrder === 'newest') {
-      this.articles.sort((a, b) => b.date.getTime() - a.date.getTime());
+      this.articles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } else {
-      this.articles.sort((a, b) => a.date.getTime() - b.date.getTime());
+      this.articles.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     }
   }
 
