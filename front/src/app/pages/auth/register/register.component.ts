@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../services/auth.service';
+import { TokenStorageService } from '../../../services/token-storage.service';
 
 @Component({
   selector: 'app-register',
@@ -10,11 +12,16 @@ import { Router } from '@angular/router';
 })
 export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
+  isSuccessful = false;
+  isSignUpFailed = false;
+  errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
     private location: Location,
-    private router: Router
+    private router: Router,
+    private authService: AuthService,
+    private tokenStorage: TokenStorageService
   ) {
     this.registerForm = this.fb.group({
       username: ['', [Validators.required]],
@@ -27,7 +34,12 @@ export class RegisterComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // Si l'utilisateur est déjà connecté, rediriger vers la page d'articles
+    if (this.tokenStorage.getToken()) {
+      this.router.navigate(['/articles']);
+    }
+  }
 
   /**
    * Retour à la page précédente
@@ -42,12 +54,22 @@ export class RegisterComponent implements OnInit {
   onSubmit(): void {
     if (this.registerForm.valid) {
       const userData = this.registerForm.value;
-      console.log('Données d\'inscription:', userData);
       
-      // Pour l'instant, simplement afficher un message
-      // Cette méthode sera mise à jour pour appeler un service d'authentification
-      alert('Inscription réussie! (Simulation)');
-      this.router.navigate(['/']);
+      this.authService.register(userData).subscribe({
+        next: data => {
+          this.isSuccessful = true;
+          this.isSignUpFailed = false;
+          
+          // Rediriger vers la page de connexion après un délai de 2 secondes
+          setTimeout(() => {
+            this.router.navigate(['/login']);
+          }, 2000);
+        },
+        error: err => {
+          this.errorMessage = err.error.message || 'Erreur lors de l\'inscription';
+          this.isSignUpFailed = true;
+        }
+      });
     } else {
       // Marquer tous les champs comme touchés pour afficher les erreurs
       Object.keys(this.registerForm.controls).forEach(key => {

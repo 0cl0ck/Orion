@@ -34,11 +34,15 @@
     
     <!-- Login form -->
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <!-- Message d'erreur -->
+      <div *ngIf="isLoginFailed" class="error-message">
+        {{ errorMessage }}
+      </div>
       <mat-form-field appearance="outline">
-        <mat-label>Email ou nom d'utilisateur</mat-label>
-        <input matInput formControlName="username" required>
-        <mat-error *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
-          Email ou nom d'utilisateur requis
+        <mat-label>Email</mat-label>
+        <input matInput formControlName="email" type="email" required>
+        <mat-error *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+          Email valide requis
         </mat-error>
       </mat-form-field>
 

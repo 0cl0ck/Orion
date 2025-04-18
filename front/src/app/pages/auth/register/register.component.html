@@ -34,6 +34,15 @@
     
     <!-- Registration form -->
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+      <!-- Message de succès -->
+      <div *ngIf="isSuccessful" class="success-message">
+        Inscription réussie! Redirection vers la page de connexion...
+      </div>
+      
+      <!-- Message d'erreur -->
+      <div *ngIf="isSignUpFailed" class="error-message">
+        {{ errorMessage }}
+      </div>
       <mat-form-field appearance="outline">
         <mat-label>Nom d'utilisateur</mat-label>
         <input matInput formControlName="username" required>

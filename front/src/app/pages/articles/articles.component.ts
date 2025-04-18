@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { TokenStorageService } from '../../services/token-storage.service';
 
 interface Article {
   id: number;
@@ -48,10 +49,15 @@ export class ArticlesComponent implements OnInit {
   ];
 
   sortOrder: 'newest' | 'oldest' = 'newest'; // Default sort order
+  currentUser: any = null;
 
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    private tokenStorage: TokenStorageService
+  ) { }
 
   ngOnInit(): void {
+    this.currentUser = this.tokenStorage.getUser();
     this.sortArticles();
   }
 
@@ -89,9 +95,9 @@ export class ArticlesComponent implements OnInit {
   }
 
   logout() {
-    // Mock logout functionality
-    console.log('Logging out');
-    this.router.navigate(['/']);
+    this.tokenStorage.signOut();
+    console.log('Déconnexion réussie');
+    this.router.navigate(['/login']);
   }
 
   toggleSortDirection() {
