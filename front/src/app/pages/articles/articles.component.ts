@@ -19,6 +19,7 @@ export class ArticlesComponent implements OnInit {
 
   sortOrder: 'newest' | 'oldest' = 'newest'; // Default sort order
   currentUser: any = null;
+  isMobileMenuOpen = false; // Pour contrôler l'état du menu mobile
 
   constructor(
     private router: Router,
@@ -97,5 +98,12 @@ export class ArticlesComponent implements OnInit {
   toggleSortDirection() {
     // Toggle between newest and oldest
     this.changeSortOrder(this.sortOrder === 'newest' ? 'oldest' : 'newest');
+  }
+
+  /**
+   * Bascule l'état du menu mobile
+   */
+  toggleMobileMenu() {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
   }
 }
