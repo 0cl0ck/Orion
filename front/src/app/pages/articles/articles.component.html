@@ -55,14 +55,17 @@
       <!-- Article card template - to be repeated for each article -->
       <div class="article-card" *ngFor="let article of articles" (click)="navigateToArticleDetail(article.id)">
         <h2 class="article-title">{{ article.title }}</h2>
-        <div class="article-meta">
+        
+        <div class="article-info">
           <div class="article-date">{{ article.createdAt | date:'dd/MM/yyyy' }}</div>
           <div class="article-author">{{ article.authorUsername }}</div>
         </div>
-        <div *ngIf="article.themeName" class="article-theme">{{ article.themeName }}</div>
+        
+
         <div class="article-content">
           {{ article.content }}
         </div>
+        
         <div class="article-comments" *ngIf="article.commentCount > 0">
           <mat-icon>comment</mat-icon> {{ article.commentCount }} commentaire(s)
         </div>
