@@ -79,8 +79,7 @@ export class ArticlesComponent implements OnInit {
   }
 
   navigateToThemes() {
-    // To be implemented when themes page is created
-    console.log('Navigating to themes');
+    this.router.navigate(['/themes']);
   }
 
   navigateToProfile() {
