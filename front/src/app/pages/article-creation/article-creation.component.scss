@@ -1,0 +1,371 @@
+/* Styles globaux de la page */
+.article-creation-page {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden; /* Empêche le débordement horizontal */
+  box-sizing: border-box;
+}
+
+/* Styles exacts du header comme sur la page articles */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background-color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  box-sizing: border-box;
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+    
+    .logo {
+      height: 40px;
+      object-fit: contain;
+    }
+  }
+
+  .menu-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .nav-container {
+    position: fixed;
+    top: 60px;
+    right: -100%;
+    height: calc(100vh - 60px);
+    width: 60%;
+    background-color: white;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Pour separer le haut et le bas */
+    z-index: 99;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+
+    &.nav-visible {
+      right: 0;
+    }
+
+    .nav-links-container {
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      gap: 20px;
+      align-items: flex-end; /* Aligner les éléments à droite */
+      
+      .logout-link {
+        text-decoration: none;
+        color: #e53935; /* Rouge */
+        font-weight: 500;
+        font-size: 16px;
+        text-align: right;
+        margin-bottom: 10px;
+      }
+
+      .nav-links {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-end; /* Aligner à droite */
+
+        a {
+          text-decoration: none;
+          color: black;
+          font-weight: 500;
+          font-size: 16px;
+          padding: 5px 10px;
+
+          &.active {
+            color: #7763C5;
+            font-weight: 600;
+          }
+        }
+      }
+    }
+    
+    .profile-container {
+      padding: 20px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end;
+      margin-top: auto;
+      
+      .user-profile-btn {
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        .avatar-img {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+      }
+    }
+  }
+
+  @media (min-width: 768px) {
+    height: 70px;
+    
+    .logo-container .logo {
+      height: 50px;
+    }
+    
+    .menu-button {
+      display: none;
+    }
+    
+    .nav-container {
+      position: static;
+      height: auto;
+      width: auto;
+      background-color: transparent;
+      box-shadow: none;
+      flex-direction: row;
+      transition: none;
+      align-items: center;
+      
+      .nav-links-container {
+        display: flex;
+        flex-direction: row;
+        padding: 0;
+        align-items: center;
+        gap: 20px;
+        
+        .logout-link {
+          margin-bottom: 0;
+          text-align: left;
+        }
+        
+        .nav-links {
+          flex-direction: row;
+          align-items: center;
+        }
+      }
+      
+      .profile-container {
+        padding: 0;
+        margin-top: 0;
+        margin-left: 20px;
+      }
+    }
+  }
+}
+
+/* Contenu principal */
+.main-content {
+  flex: 1;
+  padding: 32px 24px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  background-color: #f5f5f5;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Flèche de retour */
+.back-button-container {
+  position: absolute;
+  left: 0;
+  top: 32px;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  mat-icon {
+    font-size: 24px;
+    color: #7763C5;
+  }
+  
+  &:hover {
+    mat-icon {
+      color: #6552b5;
+    }
+  }
+}
+
+/* Style du titre de la page */
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 32px;
+  color: #333;
+  text-align: center;
+}
+
+/* Messages de succès et d'erreur */
+.error-message, .success-message {
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+.error-message {
+  background-color: #ffecec;
+  color: #e63946;
+  border-left: 4px solid #e63946;
+}
+
+.success-message {
+  background-color: #e3f8e2;
+  color: #2a9d8f;
+  border-left: 4px solid #2a9d8f;
+}
+
+/* Styles du formulaire */
+.article-form {
+  background-color: #ffffff;
+  padding: 32px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  
+  .form-group {
+    margin-bottom: 24px;
+    padding: 0 1px; /* Légère marge interne pour éviter les débordements */
+    
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    
+    .form-control {
+      width: calc(100% - 2px); /* Ajustement pour éviter le débordement */
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      box-sizing: border-box;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      
+      &:focus {
+        outline: none;
+        border-color: #7763C5;
+        box-shadow: 0 0 0 2px rgba(119, 99, 197, 0.2);
+      }
+      
+      &.invalid {
+        border-color: #e63946;
+        box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.1);
+      }
+    }
+    
+    .content-textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+    
+    .validation-message {
+      color: #e63946;
+      font-size: 14px;
+      margin-top: 6px;
+    }
+  }
+  
+  /* Style pour le bouton "Créer" centré */
+  .form-actions-centered {
+    display: flex;
+    justify-content: center;
+    margin-top: 32px;
+    
+    .create-button {
+      padding: 10px 40px;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s, opacity 0.3s;
+      border: none;
+      font-size: 16px;
+      background-color: #7763C5;
+      color: white;
+      
+      &:hover {
+        background-color: #6552b5;
+      }
+      
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// Media queries for responsive design
+@media (max-width: 768px) {
+  .app-header {
+    padding: 10px;
+    width: 100%;
+    
+    .nav-links {
+      gap: 10px;
+    }
+  }
+
+  .main-content {
+    padding: 15px;
+    width: 100%;
+  }
+  
+  .article-form {
+    width: 100%;
+    padding: 16px 12px;
+  }
+  
+  .back-button-container {
+    top: 16px;
+    left: 8px;
+  }
+  
+  .page-title {
+    font-size: 20px;
+    margin-top: 20px;
+    margin-bottom: 24px;
+    padding-left: 32px; /* Pour laisser de la place à la flèche de retour */
+    padding-right: 32px;
+  }
+  
+  .article-form {
+    padding: 20px 16px;
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-actions-centered {
+      .create-button {
+        width: 100%;
+        padding: 12px 16px;
+      }
+    }
+  }
+}

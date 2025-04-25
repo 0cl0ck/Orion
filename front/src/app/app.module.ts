@@ -22,12 +22,13 @@ import { HomeComponent } from './pages/home/home.component';
 import { RegisterComponent } from './pages/auth/register/register.component';
 import { LoginComponent } from './pages/auth/login/login.component';
 import { ArticlesComponent } from './pages/articles/articles.component';
+import { ArticleCreationComponent } from './pages/article-creation/article-creation.component';
 
 // Services
 import { authInterceptorProviders } from './services/auth.interceptor';
 
 @NgModule({
-  declarations: [AppComponent, HomeComponent, RegisterComponent, LoginComponent, ArticlesComponent],
+  declarations: [AppComponent, HomeComponent, RegisterComponent, LoginComponent, ArticlesComponent, ArticleCreationComponent],
   imports: [
     // Angular core modules
     BrowserModule,

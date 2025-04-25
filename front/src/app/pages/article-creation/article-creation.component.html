@@ -1,0 +1,114 @@
+<div class="article-creation-page">
+  <!-- Header - Réutilisation exacte du header de la page articles -->
+  <header class="app-header">
+    <div class="logo-container">
+      <img src="/assets/logo_p6.png" alt="MDD Logo" class="logo" />
+    </div>
+    <div class="menu-button" (click)="toggleMobileMenu()">
+      <mat-icon>menu</mat-icon>
+    </div>
+    <div class="nav-container" [class.nav-visible]="isMobileMenuOpen">
+      <div class="nav-links-container">
+        <a href="javascript:void(0)" class="logout-link" (click)="logout()">Se déconnecter</a>
+        <div class="nav-links">
+          <a href="javascript:void(0)" (click)="navigateToArticles()">Articles</a>
+          <a href="javascript:void(0)" (click)="navigateToThemes()">Thèmes</a>
+        </div>
+      </div>
+      <div class="profile-container">
+        <button mat-icon-button class="user-profile-btn" (click)="navigateToProfile()">
+          <img src="/assets/profile_placeholder.jpg" alt="Profil" class="avatar-img" onerror="this.src='assets/default-avatar.png'" />
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="main-content">
+    <!-- Bouton retour comme sur la maquette -->
+    <div class="back-button-container">
+      <button class="back-button" (click)="navigateToArticles()">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+    </div>
+
+    <h1 class="page-title">Créer un nouvel article</h1>
+
+    <!-- Message d'erreur ou de succès -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+    <div *ngIf="successMessage" class="success-message">
+      {{ successMessage }}
+    </div>
+
+    <!-- Formulaire de création d'article avec ordre des champs selon maquette -->
+    <form [formGroup]="articleForm" (ngSubmit)="onSubmit()" class="article-form">
+      <!-- Thème en premier selon la maquette -->
+      <div class="form-group">
+        <label for="themeId">Thème</label>
+        <select 
+          id="themeId" 
+          formControlName="themeId" 
+          class="form-control"
+          [ngClass]="{'invalid': f['themeId'].touched && f['themeId'].errors}"
+        >
+          <option value="">Sélectionner un thème</option>
+          <option *ngFor="let theme of themes" [value]="theme.id">
+            {{ theme.name }}
+          </option>
+        </select>
+        <div *ngIf="f['themeId'].touched && f['themeId'].errors" class="validation-message">
+          <div *ngIf="f['themeId'].errors['required']">Le choix d'un thème est obligatoire</div>
+        </div>
+      </div>
+
+      <!-- Titre en deuxième -->
+      <div class="form-group">
+        <label for="title">Titre</label>
+        <input 
+          type="text" 
+          id="title" 
+          formControlName="title" 
+          class="form-control" 
+          [ngClass]="{'invalid': f['title'].touched && f['title'].errors}"
+          placeholder="Titre de l'article"
+        >
+        <div *ngIf="f['title'].touched && f['title'].errors" class="validation-message">
+          <div *ngIf="f['title'].errors['required']">Le titre est obligatoire</div>
+          <div *ngIf="f['title'].errors['minlength']">Le titre doit contenir au moins 3 caractères</div>
+          <div *ngIf="f['title'].errors['maxlength']">Le titre ne doit pas dépasser 100 caractères</div>
+        </div>
+      </div>
+
+      <!-- Contenu en dernier -->
+      <div class="form-group">
+        <label for="content">Contenu</label>
+        <textarea 
+          id="content" 
+          formControlName="content" 
+          class="form-control content-textarea" 
+          rows="8"
+          [ngClass]="{'invalid': f['content'].touched && f['content'].errors}"
+          placeholder="Contenu de l'article"
+        ></textarea>
+        <div *ngIf="f['content'].touched && f['content'].errors" class="validation-message">
+          <div *ngIf="f['content'].errors['required']">Le contenu est obligatoire</div>
+          <div *ngIf="f['content'].errors['minlength']">Le contenu doit contenir au moins 10 caractères</div>
+        </div>
+      </div>
+
+      <!-- Un seul bouton Créer centré comme sur la maquette -->
+      <div class="form-actions-centered">
+        <button 
+          type="submit" 
+          class="create-button" 
+          [disabled]="articleForm.invalid || loading"
+        >
+          <span *ngIf="!loading">Créer</span>
+          <span *ngIf="loading">Création en cours...</span>
+        </button>
+      </div>
+    </form>
+  </main>
+</div>

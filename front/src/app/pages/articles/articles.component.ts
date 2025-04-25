@@ -75,8 +75,7 @@ export class ArticlesComponent implements OnInit {
   }
 
   createNewArticle() {
-    // To be implemented when article creation page is created
-    console.log('Creating new article');
+    this.router.navigate(['/articles/new']);
   }
 
   navigateToThemes() {
