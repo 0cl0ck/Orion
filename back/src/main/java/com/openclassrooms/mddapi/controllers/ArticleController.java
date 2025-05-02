@@ -16,6 +16,8 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.openclassrooms.mddapi.exceptions.ErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,6 +40,12 @@ public class ArticleController {
 
     @Autowired
     private ArticleService articleService;
+    
+    @Autowired
+    private com.openclassrooms.mddapi.repositories.ThemeRepository themeRepository;
+    
+    @Autowired
+    private com.openclassrooms.mddapi.repositories.UserRepository userRepository;
 
     /**
      * Récupère tous les articles
@@ -85,12 +93,31 @@ public class ArticleController {
             @ApiResponse(responseCode = "404", description = "Thème non trouvé", content = @Content)
     })
     @GetMapping("/theme/{themeId}")
-    public ResponseEntity<List<ArticleResponse>> getArticlesByTheme(@PathVariable Long themeId) {
-        try {
-            return ResponseEntity.ok(articleService.getArticlesByTheme(themeId));
-        } catch (EntityNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+    public ResponseEntity<?> getArticlesByTheme(
+            @PathVariable Long themeId,
+            HttpServletRequest request) {
+        
+        logger.info("Récupération des articles pour le thème ID: {}", themeId);
+        
+        // Vérification préalable de l'existence du thème
+        boolean themeExists = themeRepository.existsById(themeId);
+        if (!themeExists) {
+            logger.warn("Thème non trouvé avec l'ID: {}", themeId);
+            
+            ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Thème non trouvé avec l'id: " + themeId,
+                request.getRequestURI()
+            );
+            
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(errorResponse);
         }
+        
+        // Le thème existe, continuer avec le service
+        List<ArticleResponse> articles = articleService.getArticlesByTheme(themeId);
+        return ResponseEntity.ok(articles);
     }
 
     /**
@@ -105,12 +132,31 @@ public class ArticleController {
             @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé", content = @Content)
     })
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ArticleResponse>> getArticlesByUser(@PathVariable Long userId) {
-        try {
-            return ResponseEntity.ok(articleService.getArticlesByUser(userId));
-        } catch (EntityNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+    public ResponseEntity<?> getArticlesByUser(
+            @PathVariable Long userId,
+            HttpServletRequest request) {
+        
+        logger.info("Récupération des articles pour l'utilisateur ID: {}", userId);
+        
+        // Vérification préalable de l'existence de l'utilisateur
+        boolean userExists = userRepository.existsById(userId);
+        if (!userExists) {
+            logger.warn("Utilisateur non trouvé avec l'ID: {}", userId);
+            
+            ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Utilisateur non trouvé avec l'id: " + userId,
+                request.getRequestURI()
+            );
+            
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(errorResponse);
         }
+        
+        // L'utilisateur existe, continuer avec le service
+        List<ArticleResponse> articles = articleService.getArticlesByUser(userId);
+        return ResponseEntity.ok(articles);
     }
 
     /**
@@ -124,8 +170,23 @@ public class ArticleController {
                     content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ArticleResponse.class)) })
     })
     @GetMapping("/search")
-    public ResponseEntity<List<ArticleResponse>> searchArticlesByTitle(@RequestParam String title) {
-        return ResponseEntity.ok(articleService.searchArticlesByTitle(title));
+    public ResponseEntity<?> searchArticlesByTitle(
+            @RequestParam String title,
+            HttpServletRequest request) {
+        
+        logger.info("Recherche d'articles avec le titre contenant: {}", title);
+        
+        List<ArticleResponse> matchingArticles = articleService.searchArticlesByTitle(title);
+        
+        // Si aucun article ne correspond à la recherche, retourne 204 No Content
+        if (matchingArticles == null || matchingArticles.isEmpty()) {
+            logger.info("Aucun article trouvé pour la recherche: {}", title);
+            return ResponseEntity.noContent().build();
+        }
+        
+        // Sinon, retourne la liste des articles trouvés
+        logger.info("Trouvé {} article(s) correspondant à la recherche: {}", matchingArticles.size(), title);
+        return ResponseEntity.ok(matchingArticles);
     }
 
     /**
@@ -143,9 +204,10 @@ public class ArticleController {
     })
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ArticleResponse> createArticle(
+    public ResponseEntity<?> createArticle(
             @Valid @RequestBody ArticleRequest articleRequest,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            HttpServletRequest request) {
         logger.info("========== DÉBUT DE CRÉATION D'ARTICLE ==========");
         
         // Vérifier l'authentification
@@ -164,6 +226,23 @@ public class ArticleController {
             (articleRequest.getContent() != null ? articleRequest.getContent().substring(0, Math.min(30, articleRequest.getContent().length())) + "..." : "null"),
             (articleRequest.getContent() != null ? articleRequest.getContent().length() : 0));
         logger.info("  - ThemeId: {}", articleRequest.getThemeId());
+        
+        // Vérification préalable de l'existence du thème pour éviter l'exception EntityNotFoundException
+        boolean themeExists = themeRepository.existsById(articleRequest.getThemeId());
+        if (!themeExists) {
+            logger.error("Le thème avec l'ID {} n'existe pas", articleRequest.getThemeId());
+            logger.info("========== FIN DE CRÉATION D'ARTICLE (ÉCHEC) ==========");
+            
+            ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Thème introuvable avec id: " + articleRequest.getThemeId(),
+                request.getRequestURI()
+            );
+            
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(errorResponse);
+        }
         
         try {
             logger.info("Appel du service pour créer l'article...");

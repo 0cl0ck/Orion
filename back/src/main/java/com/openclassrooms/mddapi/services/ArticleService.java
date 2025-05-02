@@ -9,6 +9,7 @@ import com.openclassrooms.mddapi.repositories.ArticleRepository;
 import com.openclassrooms.mddapi.repositories.ThemeRepository;
 import com.openclassrooms.mddapi.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import com.openclassrooms.mddapi.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -101,15 +102,17 @@ public class ArticleService {
      * @param articleRequest DTO contenant les données de l'article à créer
      * @param userId Identifiant de l'utilisateur créant l'article
      * @return DTO de réponse contenant les données de l'article créé
-     * @throws EntityNotFoundException si le thème ou l'utilisateur n'existe pas
+     * @throws ResourceNotFoundException si le thème ou l'utilisateur n'existe pas
      */
     @Transactional
     public ArticleResponse createArticle(ArticleRequest articleRequest, Long userId) {
+        // Vérifier que l'utilisateur existe
         User author = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec l'id : " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", "id", userId));
         
+        // Vérifier que le thème existe (utilise notre exception personnalisée)
         Theme theme = themeRepository.findById(articleRequest.getThemeId())
-                .orElseThrow(() -> new EntityNotFoundException("Thème non trouvé avec l'id : " + articleRequest.getThemeId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Thème", "id", articleRequest.getThemeId()));
         
         Article article = new Article();
         article.setTitle(articleRequest.getTitle());

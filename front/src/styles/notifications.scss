@@ -1,0 +1,62 @@
+// Styles pour les notifications toast
+// A importer dans le fichier styles.scss
+
+// Styles communs pour toutes les notifications
+.mat-mdc-snack-bar-container {
+  .mdc-snackbar__surface {
+    border-radius: 8px !important;
+  }
+  
+  .mat-mdc-snack-bar-label {
+    font-weight: 500;
+  }
+  
+  .mat-mdc-button {
+    color: white;
+    font-weight: 600;
+  }
+}
+
+// Style spécifique pour les notifications de succès
+.notification-success {
+  .mdc-snackbar__surface {
+    background-color: #43a047 !important; // Vert
+  }
+  
+  .mat-mdc-snack-bar-label, .mat-mdc-snack-bar-actions {
+    color: white;
+  }
+}
+
+// Style spécifique pour les notifications d'erreur
+.notification-error {
+  .mdc-snackbar__surface {
+    background-color: #f44336 !important; // Rouge
+  }
+  
+  .mat-mdc-snack-bar-label, .mat-mdc-snack-bar-actions {
+    color: white;
+  }
+}
+
+// Style spécifique pour les notifications d'information
+.notification-info {
+  .mdc-snackbar__surface {
+    background-color: #2196f3 !important; // Bleu
+  }
+  
+  .mat-mdc-snack-bar-label, .mat-mdc-snack-bar-actions {
+    color: white;
+  }
+}
+
+// Style spécifique pour les notifications d'avertissement
+.notification-warning {
+  .mdc-snackbar__surface {
+    background-color: #ff9800 !important; // Orange
+  }
+  
+  .mat-mdc-snack-bar-label, .mat-mdc-snack-bar-actions {
+    color: white;
+  }
+}

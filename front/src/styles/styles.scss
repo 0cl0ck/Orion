@@ -1,5 +1,8 @@
 /* You can add global styles to this file, and also import other style files */
 
+/* Importer les styles de notifications */
+@import './notifications.scss';
+
 /* Variables de couleurs basées sur la maquette Figma */
 :root {
   --primary-color: #7763C5;

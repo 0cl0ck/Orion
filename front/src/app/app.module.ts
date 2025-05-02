@@ -12,6 +12,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 // Routing
 import { AppRoutingModule } from './app-routing.module';
@@ -28,6 +29,7 @@ import { ArticleDetailComponent } from './pages/article-detail/article-detail.co
 
 // Services
 import { authInterceptorProviders } from './services/auth.interceptor';
+import { errorInterceptorProviders } from './services/error.interceptor';
 
 @NgModule({
   declarations: [AppComponent, HomeComponent, RegisterComponent, LoginComponent, ArticlesComponent, ArticleCreationComponent, ThemesComponent, ArticleDetailComponent],
@@ -47,8 +49,9 @@ import { authInterceptorProviders } from './services/auth.interceptor';
     MatMenuModule,
     MatCardModule,
     MatDividerModule,
+    MatSnackBarModule,
   ],
-  providers: [authInterceptorProviders],
+  providers: [authInterceptorProviders, errorInterceptorProviders],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

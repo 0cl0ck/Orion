@@ -19,6 +19,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import com.openclassrooms.mddapi.exceptions.ErrorResponse;
+import com.openclassrooms.mddapi.repositories.ThemeRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -26,8 +31,13 @@ import java.util.List;
 @Tag(name = "Thèmes", description = "API de gestion des thèmes")
 public class ThemeController {
 
+    private static final Logger logger = LoggerFactory.getLogger(ThemeController.class);
+
     @Autowired
     private ThemeService themeService;
+    
+    @Autowired
+    private ThemeRepository themeRepository;
 
     @GetMapping
     @Operation(summary = "Récupérer tous les thèmes", description = "Retourne la liste de tous les thèmes disponibles")
@@ -47,14 +57,31 @@ public class ThemeController {
                     content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ThemeResponse.class)) }),
             @ApiResponse(responseCode = "404", description = "Thème non trouvé", content = @Content)
     })
-    public ResponseEntity<ThemeResponse> getThemeById(
-            @Parameter(description = "ID du thème à récupérer") @PathVariable Long id) {
-        try {
-            ThemeResponse theme = themeService.getThemeById(id);
-            return new ResponseEntity<>(theme, HttpStatus.OK);
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Thème non trouvé avec l'id: " + id, e);
+    public ResponseEntity<?> getThemeById(
+            @Parameter(description = "ID du thème à récupérer") @PathVariable Long id,
+            HttpServletRequest request) {
+        
+        logger.info("Récupération du thème avec l'ID: {}", id);
+        
+        // Vérification préalable de l'existence du thème
+        boolean themeExists = themeRepository.existsById(id);
+        if (!themeExists) {
+            logger.warn("Thème non trouvé avec l'ID: {}", id);
+            
+            ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Thème non trouvé avec l'id: " + id,
+                request.getRequestURI()
+            );
+            
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(errorResponse);
         }
+        
+        // Le thème existe, continuer avec le service
+        ThemeResponse theme = themeService.getThemeById(id);
+        return new ResponseEntity<>(theme, HttpStatus.OK);
     }
 
     @PostMapping
@@ -86,18 +113,45 @@ public class ThemeController {
             @ApiResponse(responseCode = "400", description = "Données invalides", content = @Content),
             @ApiResponse(responseCode = "403", description = "Accès refusé", content = @Content)
     })
-    public ResponseEntity<ThemeResponse> updateTheme(
+    public ResponseEntity<?> updateTheme(
             @Parameter(description = "ID du thème à mettre à jour") @PathVariable Long id,
-            @Parameter(description = "Nouvelles données du thème") @Valid @RequestBody ThemeRequest themeRequest) {
+            @Parameter(description = "Nouvelles données du thème") @Valid @RequestBody ThemeRequest themeRequest,
+            HttpServletRequest request) {
+        
+        logger.info("Mise à jour du thème avec l'ID: {}", id);
+        logger.info("Nouvelles données: {}", themeRequest);
+        
+        // Vérification préalable de l'existence du thème
+        boolean themeExists = themeRepository.existsById(id);
+        if (!themeExists) {
+            logger.warn("Thème non trouvé avec l'ID: {}", id);
+            
+            ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Thème non trouvé avec l'id: " + id,
+                request.getRequestURI()
+            );
+            
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(errorResponse);
+        }
+        
         try {
             ThemeResponse updatedTheme = themeService.updateTheme(id, themeRequest);
             return new ResponseEntity<>(updatedTheme, HttpStatus.OK);
         } catch (Exception e) {
-            throw new ResponseStatusException(
-                    e.getClass().getSimpleName().equals("EntityNotFoundException") ? 
-                    HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST, 
-                    e.getMessage(), e
+            logger.error("Erreur lors de la mise à jour du thème: {}", e.getMessage());
+            
+            ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Erreur lors de la mise à jour du thème: " + e.getMessage(),
+                request.getRequestURI()
             );
+            
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse);
         }
     }
 
@@ -109,17 +163,43 @@ public class ThemeController {
             @ApiResponse(responseCode = "404", description = "Thème non trouvé", content = @Content),
             @ApiResponse(responseCode = "403", description = "Accès refusé", content = @Content)
     })
-    public ResponseEntity<Void> deleteTheme(
-            @Parameter(description = "ID du thème à supprimer") @PathVariable Long id) {
+    public ResponseEntity<?> deleteTheme(
+            @Parameter(description = "ID du thème à supprimer") @PathVariable Long id,
+            HttpServletRequest request) {
+        
+        logger.info("Suppression du thème avec l'ID: {}", id);
+        
+        // Vérification préalable de l'existence du thème
+        boolean themeExists = themeRepository.existsById(id);
+        if (!themeExists) {
+            logger.warn("Thème non trouvé avec l'ID: {}", id);
+            
+            ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Thème non trouvé avec l'id: " + id,
+                request.getRequestURI()
+            );
+            
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(errorResponse);
+        }
+        
         try {
             themeService.deleteTheme(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
-            throw new ResponseStatusException(
-                    e.getClass().getSimpleName().equals("EntityNotFoundException") ? 
-                    HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST, 
-                    e.getMessage(), e
+            logger.error("Erreur lors de la suppression du thème: {}", e.getMessage());
+            
+            ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Erreur lors de la suppression du thème: " + e.getMessage(),
+                request.getRequestURI()
             );
+            
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse);
         }
     }
 }
