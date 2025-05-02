@@ -24,12 +24,13 @@ import { LoginComponent } from './pages/auth/login/login.component';
 import { ArticlesComponent } from './pages/articles/articles.component';
 import { ArticleCreationComponent } from './pages/article-creation/article-creation.component';
 import { ThemesComponent } from './pages/themes/themes.component';
+import { ArticleDetailComponent } from './pages/article-detail/article-detail.component';
 
 // Services
 import { authInterceptorProviders } from './services/auth.interceptor';
 
 @NgModule({
-  declarations: [AppComponent, HomeComponent, RegisterComponent, LoginComponent, ArticlesComponent, ArticleCreationComponent, ThemesComponent],
+  declarations: [AppComponent, HomeComponent, RegisterComponent, LoginComponent, ArticlesComponent, ArticleCreationComponent, ThemesComponent, ArticleDetailComponent],
   imports: [
     // Angular core modules
     BrowserModule,

@@ -48,16 +48,29 @@ export class LoginComponent implements OnInit {
   onSubmit(): void {
     if (this.loginForm.valid) {
       const loginData = this.loginForm.value;
+      console.log('Tentative de connexion avec:', loginData.email);
       
       this.authService.login(loginData).subscribe({
         next: data => {
+          console.log('Réponse de connexion complète:', data);
+          console.log('Token présent dans la réponse:', !!data.token);
+          
           this.tokenStorage.saveToken(data.token);
           this.tokenStorage.saveUser(data);
+          
+          // Vérifier si le token est bien stocké
+          const storedToken = this.tokenStorage.getToken();
+          console.log('Token stocké après connexion:', !!storedToken);
+          if (storedToken) {
+            console.log('Début du token stocké:', storedToken.substring(0, 20) + '...');
+          }
           
           this.isLoginFailed = false;
           this.router.navigate(['/articles']);
         },
         error: err => {
+          console.error('Erreur de connexion:', err);
+          console.error('Détails de l\'erreur:', err.error);
           this.errorMessage = err.error.message || 'Erreur de connexion';
           this.isLoginFailed = true;
         }

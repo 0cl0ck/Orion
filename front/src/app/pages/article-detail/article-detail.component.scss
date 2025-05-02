@@ -1,0 +1,465 @@
+/* Styles globaux de la page */
+.article-detail-page {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden; /* Empêche le débordement horizontal */
+  box-sizing: border-box;
+}
+
+/* Styles exacts du header comme sur la page articles */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background-color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  box-sizing: border-box;
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+    
+    .logo {
+      height: 40px;
+      object-fit: contain;
+    }
+  }
+
+  .menu-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .nav-container {
+    position: fixed;
+    top: 60px;
+    right: -100%;
+    height: calc(100vh - 60px);
+    width: 60%;
+    background-color: white;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Pour separer le haut et le bas */
+    z-index: 99;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+
+    &.nav-visible {
+      right: 0;
+    }
+
+    .nav-links-container {
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      gap: 20px;
+      align-items: flex-end; /* Aligner les éléments à droite */
+      
+      .logout-link {
+        text-decoration: none;
+        color: #e53935; /* Rouge */
+        font-weight: 500;
+        font-size: 16px;
+        text-align: right;
+        margin-bottom: 10px;
+      }
+
+      .nav-links {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-end; /* Aligner à droite */
+
+        a {
+          text-decoration: none;
+          color: black;
+          font-weight: 500;
+          font-size: 16px;
+          padding: 5px 10px;
+
+          &.active {
+            color: #7763C5;
+            font-weight: 600;
+          }
+        }
+      }
+    }
+    
+    .profile-container {
+      padding: 20px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end;
+      margin-top: auto;
+      
+      .user-profile-btn {
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        .avatar-img {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+      }
+    }
+  }
+
+  @media (min-width: 768px) {
+    height: 70px;
+    
+    .logo-container .logo {
+      height: 50px;
+    }
+    
+    .menu-button {
+      display: none;
+    }
+    
+    .nav-container {
+      position: static;
+      height: auto;
+      width: auto;
+      background-color: transparent;
+      box-shadow: none;
+      flex-direction: row;
+      transition: none;
+      align-items: center;
+      
+      .nav-links-container {
+        display: flex;
+        flex-direction: row;
+        padding: 0;
+        align-items: center;
+        gap: 20px;
+        
+        .logout-link {
+          margin-bottom: 0;
+          text-align: left;
+        }
+        
+        .nav-links {
+          flex-direction: row;
+          align-items: center;
+        }
+      }
+      
+      .profile-container {
+        padding: 0;
+        margin-top: 0;
+        margin-left: 20px;
+      }
+    }
+  }
+}
+
+/* Styles du contenu principal */
+.main-content {
+  flex: 1;
+  padding: 20px;
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Messages de statut (chargement, erreur) */
+.status-messages {
+  margin: 20px 0;
+  
+  .loading-message {
+    text-align: center;
+    color: #666;
+    font-size: 16px;
+    padding: 20px;
+  }
+  
+  .error-message {
+    text-align: center;
+    color: #e53935;
+    background-color: rgba(229, 57, 53, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 16px;
+  }
+}
+
+/* Contenu de l'article */
+.article-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 25px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
+
+  .article-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    
+    .back-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+      margin-right: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      transition: color 0.2s;
+      
+      &:hover {
+        color: #7763C5;
+      }
+      
+      mat-icon {
+        font-size: 24px;
+        height: 24px;
+        width: 24px;
+      }
+    }
+    
+    .article-title {
+      font-size: 22px;
+      font-weight: 600;
+      margin: 0;
+      flex: 1;
+      color: #333;
+    }
+  }
+  
+  .article-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 25px;
+    
+    .metadata-item {
+      display: flex;
+      flex-direction: column;
+      margin-right: 20px;
+      
+      .metadata-label {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 3px;
+      }
+      
+      .metadata-value {
+        font-size: 15px;
+        font-weight: 500;
+        color: #333;
+      }
+    }
+  }
+  
+  .article-content {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 30px;
+    white-space: pre-line; /* Preserve line breaks */
+  }
+  
+  .article-divider {
+    height: 1px;
+    background-color: #e0e0e0;
+    margin: 30px 0;
+  }
+  
+  .comments-section {
+    .comments-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    
+    .comments-list {
+      margin-bottom: 25px;
+      
+      .comment-item {
+        margin-bottom: 20px;
+        display: flex;
+        align-items: flex-start;
+        
+        .comment-author {
+          font-weight: 500;
+          font-size: 15px;
+          color: #333;
+          min-width: 120px;
+          margin-right: 15px;
+          padding-top: 10px;
+        }
+        
+        .comment-content {
+          flex: 1;
+          font-size: 15px;
+          line-height: 1.5;
+          color: #666;
+          background-color: #f9f9f9;
+          padding: 12px 15px;
+          border-radius: 4px;
+          white-space: pre-line; /* Preserve line breaks */
+        }
+      }
+    }
+    
+    .no-comments {
+      text-align: center;
+      color: #666;
+      font-size: 15px;
+      margin: 25px 0;
+    }
+    
+    .new-comment-form {
+      margin-top: 20px;
+      
+      .comment-form-container {
+        display: flex;
+        align-items: flex-start;
+      }
+      
+      .current-user {
+        font-weight: 500;
+        font-size: 15px;
+        color: #333;
+        min-width: 120px;
+        margin-right: 15px;
+        padding-top: 10px;
+      }
+      
+      .input-container {
+        display: flex;
+        align-items: flex-start;
+        flex: 1;
+        width: 100%;
+        margin: 0 50px 0 50px;
+        
+        .textarea-wrapper {
+          flex: 1;
+          margin-right: 10px;
+        }
+        
+        .comment-textarea {
+          width: 100%;
+          padding: 12px 15px;
+          border: 1px solid #e0e0e0;
+          border-radius: 4px;
+          font-size: 15px;
+          line-height: 1.5;
+          resize: vertical;
+          min-height: 80px;
+          font-family: inherit;
+          box-sizing: border-box;
+          
+          &:focus {
+            outline: none;
+            border-color: #7763C5;
+          }
+        }
+      }
+      
+      .form-errors {
+        color: #e53935;
+        font-size: 14px;
+        margin-top: 5px;
+        margin-bottom: 10px;
+      }
+      
+      .comment-status {
+        margin-bottom: 15px;
+        
+        .error-message {
+          color: #e53935;
+          font-size: 14px;
+        }
+        
+        .success-message {
+          color: #43a047;
+          font-size: 14px;
+        }
+      }
+      
+      .submit-container {
+        display: flex;
+        align-items: flex-start;
+        padding-top: 8px; /* Pour aligner avec la zone de texte */
+        
+        .submit-button {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: #7763C5;
+          color: white;
+          border: none;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          cursor: pointer;
+          transition: background-color 0.3s;
+          
+          &:hover:not(:disabled) {
+            background-color: #6552b5;
+          }
+          
+          &:disabled {
+            background-color: #b8aee0;
+            cursor: not-allowed;
+          }
+          
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Media queries pour design responsive */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 10px;
+  }
+  
+  .main-content {
+    padding: 15px;
+  }
+  
+  .article-container {
+    padding: 20px;
+    
+    .article-header {
+      .article-title {
+        font-size: 20px;
+      }
+    }
+    
+    .article-metadata {
+      flex-direction: column;
+      gap: 10px;
+      
+      .metadata-item {
+        margin-right: 0;
+      }
+    }
+  }
+}

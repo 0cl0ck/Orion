@@ -43,6 +43,14 @@ export class ArticleCreationComponent implements OnInit {
     this.themeService.getAllThemes().subscribe({
       next: (data) => {
         this.themes = data;
+        
+        if (this.themes && this.themes.length > 0) {
+          // Utiliser simplement le premier thème disponible dans la liste
+          const defaultTheme = this.themes[0];
+          this.articleForm.patchValue({
+            themeId: defaultTheme.id
+          });
+        }
       },
       error: (err) => {
         console.error('Erreur lors du chargement des thèmes:', err);
@@ -56,12 +64,66 @@ export class ArticleCreationComponent implements OnInit {
       return;
     }
 
+    console.log('=== SOUMISSION DU FORMULAIRE ===');
+    console.log('Valeurs du formulaire:', this.articleForm.value);
+    console.log('État du formulaire:', {
+      valid: this.articleForm.valid,
+      dirty: this.articleForm.dirty,
+      touched: this.articleForm.touched
+    });
+    
+    // Vérifier si l'utilisateur est connecté
+    const userInfo = this.tokenStorage.getUser();
+    const token = this.tokenStorage.getToken();
+    console.log('Utilisateur connecté:', !!userInfo);
+    if (userInfo) {
+      console.log('Informations utilisateur:', { 
+        id: userInfo.id,
+        email: userInfo.email,
+        username: userInfo.username,
+        roles: userInfo.roles
+      });
+    }
+    console.log('Token présent:', !!token);
+
     this.loading = true;
     this.errorMessage = '';
     this.successMessage = '';
+    
+    // Récupérer toutes les valeurs du formulaire
+    const formValues = this.articleForm.value;
+    
+    // Vérifier que le themeId est valide (qu'il existe dans la liste des thèmes récupérés)
+    // Sinon, utiliser le premier thème disponible comme fallback
+    const themeId = parseInt(formValues.themeId, 10);
+    const validatedThemeId = this.themes.some(t => t.id === themeId) ? themeId : (this.themes.length > 0 ? this.themes[0].id : null);
+    
+    console.log('Validation du themeId:', {
+      original: formValues.themeId,
+      parsed: themeId,
+      validated: validatedThemeId,
+      themesAvailable: this.themes.map(t => ({ id: t.id, name: t.name }))
+    });
+    
+    // Vérification finale qu'un thème est bien sélectionné
+    if (validatedThemeId === null) {
+      this.errorMessage = 'Aucun thème disponible. Impossible de créer l\'article.';
+      this.loading = false;
+      return;
+    }
+    
+    // Création de l'article avec un themeId validé
+    const articleData = {
+      title: formValues.title,
+      content: formValues.content,
+      themeId: validatedThemeId
+    };
 
-    this.articleService.createArticle(this.articleForm.value).subscribe({
+    // Appel au service avec les données validées
+    this.articleService.createArticle(articleData).subscribe({
       next: (response) => {
+        console.log('=== ARTICLE CRÉÉ AVEC SUCCÈS ===');
+        console.log('Réponse reçue:', response);
         this.loading = false;
         this.successMessage = 'Article créé avec succès!';
         // Rediriger vers la liste des articles après un court délai
@@ -70,9 +132,30 @@ export class ArticleCreationComponent implements OnInit {
         }, 1500);
       },
       error: (err) => {
+        console.error('=== ERREUR LORS DE LA CRÉATION D\'ARTICLE ===');
+        console.error('Status:', err.status);
+        console.error('Status Text:', err.statusText);
+        console.error('Message d\'erreur:', err.error?.message || 'Aucun message d\'erreur');
+        console.error('Erreur complète:', err);
+        
         this.loading = false;
-        this.errorMessage = err.error?.message || 'Une erreur est survenue lors de la création de l\'article';
-        console.error('Erreur:', err);
+        
+        if (err.status === 401) {
+          this.errorMessage = 'Erreur d\'authentification. Veuillez vous reconnecter.';
+          // Vérifier l'état actuel du token
+          const currentToken = this.tokenStorage.getToken();
+          console.error('État actuel du token (après erreur):', !!currentToken);
+          
+          // Tenter de récupérer les entêtes de la réponse
+          if (err.headers) {
+            console.error('En-têtes de la réponse d\'erreur:');
+            err.headers.keys().forEach((key: string) => {
+              console.error(`  ${key}: ${err.headers.get(key)}`);
+            });
+          }
+        } else {
+          this.errorMessage = err.error?.message || 'Une erreur est survenue lors de la création de l\'article';
+        }
       }
     });
   }

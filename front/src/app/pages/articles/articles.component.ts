@@ -70,8 +70,7 @@ export class ArticlesComponent implements OnInit {
   }
 
   navigateToArticleDetail(articleId: number) {
-    // To be implemented when article detail page is created
-    console.log(`Navigating to article ${articleId}`);
+    this.router.navigate(['/articles', articleId]);
   }
 
   createNewArticle() {

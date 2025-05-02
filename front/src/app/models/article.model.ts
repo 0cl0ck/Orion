@@ -1,3 +1,11 @@
+export interface Comment {
+  id: number;
+  content: string;
+  authorId?: number;
+  authorUsername: string;
+  createdAt?: string;
+}
+
 export interface Article {
   id: number;
   title: string;
@@ -8,4 +16,5 @@ export interface Article {
   themeId: number;
   themeName: string;
   commentCount: number;
+  comments?: Comment[];
 }

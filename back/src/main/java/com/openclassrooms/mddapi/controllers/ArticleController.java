@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +33,8 @@ import java.util.List;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @Tag(name = "Articles", description = "API de gestion des articles")
 public class ArticleController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ArticleController.class);
 
     @Autowired
     private ArticleService articleService;
@@ -142,11 +146,41 @@ public class ArticleController {
     public ResponseEntity<ArticleResponse> createArticle(
             @Valid @RequestBody ArticleRequest articleRequest,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        logger.info("========== DÉBUT DE CRÉATION D'ARTICLE ==========");
+        
+        // Vérifier l'authentification
+        if (userDetails == null) {
+            logger.error("userDetails est NULL - l'utilisateur n'est pas correctement authentifié");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié");
+        } else {
+            logger.info("Utilisateur authentifié: ID={}, Username={}", userDetails.getId(), userDetails.getUsername());
+            logger.info("Autorités/Rôles de l'utilisateur: {}", userDetails.getAuthorities());
+        }
+        
+        // Vérifier les données de la requête
+        logger.info("Données de l'article: {}", articleRequest);
+        logger.info("  - Titre: {}", articleRequest.getTitle());
+        logger.info("  - Contenu: {} (longueur: {})", 
+            (articleRequest.getContent() != null ? articleRequest.getContent().substring(0, Math.min(30, articleRequest.getContent().length())) + "..." : "null"),
+            (articleRequest.getContent() != null ? articleRequest.getContent().length() : 0));
+        logger.info("  - ThemeId: {}", articleRequest.getThemeId());
+        
         try {
+            logger.info("Appel du service pour créer l'article...");
             ArticleResponse createdArticle = articleService.createArticle(articleRequest, userDetails.getId());
+            logger.info("Article créé avec succès! ID={}", createdArticle.getId());
+            logger.info("========== FIN DE CRÉATION D'ARTICLE (SUCCÈS) ==========");
             return ResponseEntity.status(HttpStatus.CREATED).body(createdArticle);
         } catch (EntityNotFoundException e) {
+            logger.error("Erreur lors de la création de l'article: {}", e.getMessage());
+            logger.error("Exception complète:", e);
+            logger.info("========== FIN DE CRÉATION D'ARTICLE (ÉCHEC) ==========");
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (Exception e) {
+            logger.error("Exception non prévue lors de la création de l'article: {}", e.getMessage());
+            logger.error("Exception complète:", e);
+            logger.info("========== FIN DE CRÉATION D'ARTICLE (ÉCHEC) ==========");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erreur lors de la création de l'article");
         }
     }
 

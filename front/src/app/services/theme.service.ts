@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { Theme } from '../models/theme.model';
 import { environment } from '../../environments/environment';
 
@@ -17,20 +18,27 @@ export class ThemeService {
    * Récupère tous les thèmes
    */
   getAllThemes(): Observable<Theme[]> {
-    // TODO: Récupérer les thèmes depuis l'API et inclure les abonnements de l'utilisateur
-    // Pour le moment, retournons des données mockées en attendant que le backend soit prêt
-    const mockThemes: Theme[] = [
-      { id: 1, name: 'Développement Web', description: 'Tout sur le développement web frontend et backend, les frameworks et les bonnes pratiques.', isSubscribed: false },
-      { id: 2, name: 'Intelligence Artificielle', description: 'Actualités et discussions sur l\'IA, le Machine Learning, les LLMs et leurs applications.', isSubscribed: true },
-      { id: 3, name: 'Cybersécurité', description: 'Sécurité informatique, protection des données, cryptographie et prévention des attaques.', isSubscribed: false },
-      { id: 4, name: 'DevOps', description: 'Intégration continue, déploiement continu, Docker, Kubernetes et infrastructures cloud.', isSubscribed: false },
-      { id: 5, name: 'Mobile', description: 'Développement d\'applications mobiles sur iOS, Android et solutions cross-platform.', isSubscribed: true },
-      { id: 6, name: 'Big Data', description: 'Analyse et traitement de grandes quantités de données, technologies et outils associés.', isSubscribed: false }
-    ];
-    
-    return of(mockThemes);
-    // Quand l'API sera prête, utiliser :
-    // return this.http.get<Theme[]>(API_URL);
+    return this.http.get<Theme[]>(`${environment.apiUrl}/api/themes`)
+      .pipe(
+        map(themes => {
+          // Si l'API ne retourne pas la propriété isSubscribed, l'ajouter
+          // avec une valeur par défaut (false)
+          return themes.map(theme => ({
+            ...theme,
+            isSubscribed: theme.hasOwnProperty('isSubscribed') ? theme.isSubscribed : false
+          }));
+        }),
+        catchError(error => {
+          // En cas d'erreur, utiliser des données de secours qui correspondent aux thèmes réels de la base de données
+          const fallbackThemes: Theme[] = [
+            { id: 3, name: 'Tech & Innovation', description: 'Articles sur les dernières avancées technologiques et innovations', isSubscribed: false },
+            { id: 4, name: 'Intelligence Artificielle', description: 'Articles sur l\'IA, le machine learning et leurs applications dans divers domaines', isSubscribed: false },
+            { id: 5, name: 'Développement Web', description: 'Tout sur le développement web, frontend et backend, frameworks et bonnes pratiques', isSubscribed: false }
+          ];
+          
+          return of(fallbackThemes);
+        })
+      );
   }
 
   /**

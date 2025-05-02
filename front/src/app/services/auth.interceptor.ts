@@ -15,14 +15,20 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private tokenService: TokenStorageService) {}
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    let authReq = request;
+    // Obtenir le token
     const token = this.tokenService.getToken();
     
+    // Cloner avec les headers d'authentification si un token est présent
+    let authReq = request;
     if (token != null) {
-      // Cloner la requête et ajouter le token d'authentification
-      authReq = request.clone({
-        headers: request.headers.set('Authorization', 'Bearer ' + token)
-      });
+      // HttpHeaders est immuable - créer une nouvelle instance avec tous les headers nécessaires
+      const headers = request.headers
+        .set('Authorization', 'Bearer ' + token)
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json');
+      
+      // Cloner la requête avec tous les headers nécessaires
+      authReq = request.clone({ headers });
     }
     
     return next.handle(authReq);

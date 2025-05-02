@@ -29,25 +29,63 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        
+        // Ajout de logs détaillés pour le debugging
+        String requestURI = request.getRequestURI();
+        String method = request.getMethod();
+        logger.info("========== DÉBUT DE TRAITEMENT DE REQUÊTE ==========");
+        logger.info("Requête reçue: {} {}", method, requestURI);
+        
+        // Log des en-têtes
+        logger.info("En-têtes de la requête:");
+        java.util.Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String headerName = headerNames.nextElement();
+            logger.info("  {}: {}", headerName, request.getHeader(headerName));
+        }
+        
         try {
             String jwt = parseJwt(request);
+            
+            // Log le token extrait
+            if (jwt != null) {
+                logger.info("JWT extrait de l'en-tête Authorization: {}...", jwt.substring(0, Math.min(20, jwt.length())));
+            } else {
+                logger.warn("Aucun JWT trouvé dans la requête");
+            }
+            
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
-
+                logger.info("JWT valide pour l'utilisateur: {}", username);
+                
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                logger.info("Utilisateur chargé: {}, Rôles: {}", userDetails.getUsername(), userDetails.getAuthorities());
+                
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 userDetails,
                                 null,
                                 userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
+                
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                logger.info("Authentification définie dans le contexte de sécurité");
+            } else if (jwt != null) {
+                logger.error("JWT présent mais invalide!");
             }
         } catch (Exception e) {
-            logger.error("Impossible de définir l'authentification utilisateur: {}", e);
+            logger.error("Impossible de définir l'authentification utilisateur pour {} {}: {}", method, requestURI, e.getMessage());
+            logger.error("Exception complète:", e);
         }
-
+        
+        // Log avant de passer la requête au filtre suivant
+        logger.info("État d'authentification avant de continuer: {}", 
+                    (SecurityContextHolder.getContext().getAuthentication() != null ? 
+                    "Authentifié (" + SecurityContextHolder.getContext().getAuthentication().getName() + ")" : 
+                    "Non authentifié"));
+        logger.info("Passage au filtre suivant");
+        logger.info("========== FIN DE LOGS PRÉLIMINAIRES ==========");
+        
         filterChain.doFilter(request, response);
     }
 

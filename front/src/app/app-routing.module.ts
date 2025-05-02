@@ -5,6 +5,7 @@ import { RegisterComponent } from './pages/auth/register/register.component';
 import { LoginComponent } from './pages/auth/login/login.component';
 import { ArticlesComponent } from './pages/articles/articles.component';
 import { ArticleCreationComponent } from './pages/article-creation/article-creation.component';
+import { ArticleDetailComponent } from './pages/article-detail/article-detail.component';
 import { ThemesComponent } from './pages/themes/themes.component';
 import { AuthGuard } from './services/auth.guard';
 
@@ -16,6 +17,7 @@ const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'articles', component: ArticlesComponent, canActivate: [AuthGuard] },
   { path: 'articles/new', component: ArticleCreationComponent, canActivate: [AuthGuard] },
+  { path: 'articles/:id', component: ArticleDetailComponent, canActivate: [AuthGuard] },
   { path: 'themes', component: ThemesComponent, canActivate: [AuthGuard] },
 ];
 
