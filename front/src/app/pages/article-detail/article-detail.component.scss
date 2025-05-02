@@ -317,6 +317,26 @@
           border-radius: 4px;
           white-space: pre-line; /* Preserve line breaks */
         }
+
+        /* Style responsive pour les commentaires */
+        @media (max-width: 768px) {
+          flex-direction: column;
+          
+          .comment-author {
+            min-width: auto;
+            width: 100%;
+            text-align: right;
+            margin-right: 0;
+            margin-bottom: 5px;
+            padding-top: 0;
+            font-size: 14px;
+          }
+          
+          .comment-content {
+            width: 100%;
+            box-sizing: border-box;
+          }
+        }
       }
     }
     
@@ -350,6 +370,10 @@
         flex: 1;
         width: 100%;
         margin: 0 50px 0 50px;
+        
+        @media (max-width: 768px) {
+          margin: 0; /* Supprime les marges en mode responsive */
+        }
         
         .textarea-wrapper {
           flex: 1;

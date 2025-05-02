@@ -41,15 +41,7 @@ export class ArticlesComponent implements OnInit {
     
     this.articleService.getAllArticles().subscribe({
       next: (data) => {
-        // Prétraiter les dates avant de les assigner
-        this.articles = data.map(article => {
-          return {
-            ...article,
-            // Convertir le format de date problématique en format ISO
-            createdAt: this.fixDateFormat(article.createdAt)
-          };
-        });
-        
+        this.articles = data;
         this.sortArticles();
         this.loading = false;
       },
@@ -68,43 +60,8 @@ export class ArticlesComponent implements OnInit {
     if (this.sortOrder === 'newest') {
       this.articles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } else {
-      this.articles.sort((a, b) => new Date(a.createdAt).getTime() - new Date(a.createdAt).getTime());
+      this.articles.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     }
-  }
-  
-  /**
-   * Corrige le format de date problématique
-   * @param dateStr La chaîne de date à corriger
-   * @returns Une chaîne de date au format ISO ou la chaîne originale si non reconnue
-   */
-  private fixDateFormat(dateStr: string): string {
-    // Vérifier si le format correspond au format problématique (nombres séparés par des virgules)
-    if (dateStr && dateStr.includes(',')) {
-      try {
-        // Diviser la chaîne en parties numériques
-        const parts = dateStr.split(',').map(part => parseInt(part.trim(), 10));
-        
-        // Si nous avons au moins 3 parties (année, mois, jour)
-        if (parts.length >= 3) {
-          // Créer une date avec les composantes
-          // Note: les mois en JavaScript sont indexés à partir de 0, donc il faut soustraire 1
-          const date = new Date(parts[0], parts[1] - 1, parts[2]);
-          
-          // Ajouter heures, minutes, secondes si disponibles
-          if (parts.length >= 6) {
-            date.setHours(parts[3], parts[4], parts[5]);
-          }
-          
-          // Retourner la date au format ISO pour que le pipe date puisse la traiter
-          return date.toISOString();
-        }
-      } catch (e) {
-        console.error('Erreur lors de la conversion de la date:', e);
-      }
-    }
-    
-    // Retourner la chaîne originale si nous ne pouvons pas la corriger
-    return dateStr;
   }
 
   changeSortOrder(order: 'newest' | 'oldest') {
