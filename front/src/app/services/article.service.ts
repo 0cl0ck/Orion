@@ -141,8 +141,9 @@ export class ArticleService {
         map(comments => comments.map(comment => ({
           id: comment.id,
           content: comment.content,
-          authorId: comment.author?.id,
-          authorUsername: comment.author?.username || 'Utilisateur inconnu',
+          // Backend envoie directement authorId et authorUsername au premier niveau
+          authorId: comment.authorId,
+          authorUsername: comment.authorUsername || 'Utilisateur inconnu',
           createdAt: comment.createdAt
         })))
       );
