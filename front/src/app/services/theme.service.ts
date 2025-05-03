@@ -54,11 +54,7 @@ export class ThemeService {
    * @param themeId L'identifiant du thème
    */
   subscribeToTheme(themeId: number): Observable<any> {
-    // Quand l'API sera prête :
-    // return this.http.post(`${API_URL}/${themeId}/subscribe`, {});
-    
-    // En attendant, on simule une réponse positive
-    return of({ success: true, message: 'Abonnement réussi' });
+    return this.http.post(`${API_URL}/${themeId}/subscribe`, {});
   }
   
   /**
@@ -66,11 +62,7 @@ export class ThemeService {
    * @param themeId L'identifiant du thème
    */
   unsubscribeFromTheme(themeId: number): Observable<any> {
-    // Quand l'API sera prête :
-    // return this.http.post(`${API_URL}/${themeId}/unsubscribe`, {});
-    
-    // En attendant, on simule une réponse positive
-    return of({ success: true, message: 'Désabonnement réussi' });
+    return this.http.post(`${API_URL}/${themeId}/unsubscribe`, {});
   }
 
   /**
@@ -79,5 +71,19 @@ export class ThemeService {
    */
   getThemeArticles(themeId: number): Observable<any> {
     return this.http.get(`${API_URL}/${themeId}/articles`);
+  }
+
+  /**
+   * Récupère la liste des thèmes auxquels l'utilisateur est abonné
+   * @returns Un tableau d'IDs de thèmes auxquels l'utilisateur est abonné
+   */
+  getUserSubscriptions(): Observable<number[]> {
+    return this.http.get<number[]>(`${API_URL}/subscriptions`)
+      .pipe(
+        catchError(error => {
+          console.error('Erreur lors de la récupération des abonnements:', error);
+          return of([]);
+        })
+      );
   }
 }

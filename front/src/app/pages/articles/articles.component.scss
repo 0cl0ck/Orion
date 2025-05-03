@@ -187,6 +187,42 @@
       border-radius: 4px;
       padding: 8px 16px;
     }
+    
+    .filter-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+      
+      @media (min-width: 768px) {
+        flex-direction: row;
+        align-items: center;
+        gap: 20px;
+      }
+      
+      .subscription-filter {
+        display: flex;
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        
+        button {
+          background-color: #f5f5f5;
+          color: #666;
+          border: none;
+          padding: 6px 12px;
+          font-size: 14px;
+          transition: all 0.2s;
+          border-radius: 0;
+          
+          &.active {
+            background-color: #7763C5;
+            color: white;
+            font-weight: 500;
+          }
+        }
+      }
+    }
 
     .sort-by {
       display: flex;
@@ -250,6 +286,29 @@
       background-color: white;
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      
+      .empty-subscriptions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        
+        p {
+          margin: 0;
+          
+          &.subscription-suggestion {
+            font-size: 14px;
+            color: #777;
+            
+            a {
+              color: #7763C5;
+              font-weight: 500;
+              text-decoration: underline;
+              cursor: pointer;
+            }
+          }
+        }
+      }
     }
 
     .article-card {

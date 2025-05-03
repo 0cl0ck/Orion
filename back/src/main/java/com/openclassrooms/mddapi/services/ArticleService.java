@@ -5,15 +5,19 @@ import com.openclassrooms.mddapi.dto.ArticleResponse;
 import com.openclassrooms.mddapi.models.Article;
 import com.openclassrooms.mddapi.models.Theme;
 import com.openclassrooms.mddapi.models.User;
+import com.openclassrooms.mddapi.models.UserTheme;
 import com.openclassrooms.mddapi.repositories.ArticleRepository;
 import com.openclassrooms.mddapi.repositories.ThemeRepository;
 import com.openclassrooms.mddapi.repositories.UserRepository;
+import com.openclassrooms.mddapi.repositories.UserThemeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import com.openclassrooms.mddapi.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +35,9 @@ public class ArticleService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserThemeRepository userThemeRepository;
 
     /**
      * Récupère tous les articles par ordre décroissant de date de création
@@ -94,6 +101,37 @@ public class ArticleService {
         return articleRepository.findByTitleContainingIgnoreCase(title)
                 .stream()
                 .map(this::mapToArticleResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Récupère les articles des thèmes auxquels l'utilisateur est abonné
+     * @param userId ID de l'utilisateur
+     * @return Liste des articles des thèmes auxquels l'utilisateur est abonné
+     */
+    public List<ArticleResponse> getArticlesByUserSubscriptions(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec l'id : " + userId));
+        
+        // Récupérer les thèmes auxquels l'utilisateur est abonné
+        List<UserTheme> userThemes = userThemeRepository.findByUser(user);
+        
+        if (userThemes.isEmpty()) {
+            // Si l'utilisateur n'est abonné à aucun thème, retourner une liste vide
+            return Collections.emptyList();
+        }
+        
+        // Extraire les IDs des thèmes
+        List<Long> themeIds = userThemes.stream()
+                .map(userTheme -> userTheme.getTheme().getId())
+                .collect(Collectors.toList());
+        
+        // Récupérer tous les articles des thèmes auxquels l'utilisateur est abonné
+        List<Article> articles = articleRepository.findByThemeIdIn(themeIds);
+        
+        return articles.stream()
+                .map(this::mapToArticleResponse)
+                .sorted(Comparator.comparing(ArticleResponse::getCreatedAt).reversed())
                 .collect(Collectors.toList());
     }
 

@@ -17,4 +17,7 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     
     @Query("SELECT a FROM Article a ORDER BY a.createdAt DESC")
     List<Article> findAllOrderByCreatedAtDesc();
-} 
+    
+    @Query("SELECT a FROM Article a WHERE a.theme.id IN :themeIds")
+    List<Article> findByThemeIdIn(List<Long> themeIds);
+}

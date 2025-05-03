@@ -3,6 +3,7 @@ package com.openclassrooms.mddapi.controllers;
 import com.openclassrooms.mddapi.dto.ArticleRequest;
 import com.openclassrooms.mddapi.dto.ArticleResponse;
 import com.openclassrooms.mddapi.dto.MessageResponse;
+import com.openclassrooms.mddapi.exceptions.ErrorResponse;
 import com.openclassrooms.mddapi.security.services.UserDetailsImpl;
 import com.openclassrooms.mddapi.services.ArticleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,10 +17,11 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.openclassrooms.mddapi.exceptions.ErrorResponse;
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -187,6 +189,41 @@ public class ArticleController {
         // Sinon, retourne la liste des articles trouvés
         logger.info("Trouvé {} article(s) correspondant à la recherche: {}", matchingArticles.size(), title);
         return ResponseEntity.ok(matchingArticles);
+    }
+    
+    /**
+     * Récupère les articles des thèmes auxquels l'utilisateur est abonné
+     * @return Liste des articles des thèmes auxquels l'utilisateur est abonné
+     */
+    @GetMapping("/feed")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Récupérer les articles des thèmes auxquels l'utilisateur est abonné", 
+               description = "Retourne la liste des articles des thèmes auxquels l'utilisateur connecté est abonné")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Liste des articles récupérée avec succès (peut être vide)",
+                    content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ArticleResponse.class)) }),
+            @ApiResponse(responseCode = "401", description = "Non authentifié", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Accès refusé", content = @Content)
+    })
+    public ResponseEntity<List<ArticleResponse>> getArticlesByUserSubscriptions(HttpServletRequest request) {
+        
+        // Récupérer l'utilisateur connecté
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Long userId = userDetails.getId();
+        
+        logger.info("Récupération des articles pour les abonnements de l'utilisateur {}", userId);
+        
+        List<ArticleResponse> articles = articleService.getArticlesByUserSubscriptions(userId);
+        
+        // Même si la liste est vide, on renvoie un 200 OK
+        if (articles.isEmpty()) {
+            logger.info("Aucun article trouvé pour les abonnements de l'utilisateur {}", userId);
+        } else {
+            logger.info("Trouvé {} article(s) pour les abonnements de l'utilisateur {}", articles.size(), userId);
+        }
+        
+        return ResponseEntity.ok(articles);
     }
 
     /**

@@ -33,24 +33,43 @@ export class ArticlesComponent implements OnInit {
   }
 
   /**
-   * Charge tous les articles depuis l'API
+   * Charge les articles selon les abonnements de l'utilisateur
    */
   loadArticles() {
     this.loading = true;
     this.error = '';
     
-    this.articleService.getAllArticles().subscribe({
-      next: (data) => {
-        this.articles = data;
-        this.sortArticles();
-        this.loading = false;
-      },
-      error: (err) => {
-        this.error = 'Erreur lors du chargement des articles: ' + (err.error?.message || err.message);
-        this.loading = false;
-        console.error('Erreur:', err);
-      }
-    });
+    // Toujours charger les articles des abonnements pour les utilisateurs connectés
+    if (this.currentUser) {
+      this.articleService.getArticlesFeed().subscribe({
+        next: (data) => {
+          this.articles = data;
+          this.sortArticles();
+          this.loading = false;
+        },
+        error: (err) => {
+          this.articles = [];
+          this.error = 'Erreur lors du chargement des articles: ' + (err.error?.message || err.message);
+          this.loading = false;
+          console.error('Erreur lors du chargement des articles:', err);
+        }
+      });
+    } else {
+      // Pour les utilisateurs non connectés, on affiche tous les articles
+      this.articleService.getAllArticles().subscribe({
+        next: (data) => {
+          this.articles = data;
+          this.sortArticles();
+          this.loading = false;
+        },
+        error: (err) => {
+          this.articles = [];
+          this.error = 'Erreur lors du chargement des articles: ' + (err.error?.message || err.message);
+          this.loading = false;
+          console.error('Erreur lors du chargement des articles:', err);
+        }
+      });
+    }
   }
   
   /**
@@ -96,6 +115,8 @@ export class ArticlesComponent implements OnInit {
     // Toggle between newest and oldest
     this.changeSortOrder(this.sortOrder === 'newest' ? 'oldest' : 'newest');
   }
+  
+
 
   /**
    * Bascule l'état du menu mobile

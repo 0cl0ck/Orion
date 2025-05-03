@@ -44,8 +44,12 @@
       </div>
       
       <!-- Theme card template - to be repeated for each theme -->
-      <div class="theme-card" *ngFor="let theme of themes" (click)="viewThemeArticles(theme.id)">
-        <h2 class="theme-title">{{ theme.name }}</h2>
+      <div class="theme-card" 
+           *ngFor="let theme of themes" 
+           (click)="viewThemeArticles(theme.id)">
+        <div class="theme-header">
+          <h2 class="theme-title">{{ theme.name }}</h2>
+        </div>
         
         <div class="theme-description" *ngIf="theme.description">
           {{ theme.description }}
@@ -67,7 +71,7 @@
           </button>
           
           <button 
-            class="unsubscribe-button" 
+            class="already-subscribed-button" 
             *ngIf="theme.isSubscribed" 
             [disabled]="isSubscribing && subscribingThemeId === theme.id"
             (click)="unsubscribeFromTheme(theme.id, $event)"

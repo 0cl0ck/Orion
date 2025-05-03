@@ -50,7 +50,13 @@
     <!-- Articles list -->
     <div class="articles-list" *ngIf="!loading && !error">
       <div *ngIf="articles.length === 0" class="no-articles">
-        Aucun article disponible pour le moment.
+        <div class="empty-subscriptions" *ngIf="currentUser">
+          <p>Vous n'avez aucun article disponible dans vos abonnements.</p>
+          <p class="subscription-suggestion">Pour voir du contenu ici, abonnez-vous à des thèmes dans la section <a (click)="navigateToThemes()">Thèmes</a>.</p>
+        </div>
+        <ng-container *ngIf="!currentUser">
+          Aucun article disponible pour le moment.
+        </ng-container>
       </div>
       <!-- Article card template - to be repeated for each article -->
       <div class="article-card" *ngFor="let article of articles" (click)="navigateToArticleDetail(article.id)">

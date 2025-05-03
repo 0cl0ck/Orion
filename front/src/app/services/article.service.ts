@@ -56,6 +56,14 @@ export class ArticleService {
   searchArticlesByTitle(title: string): Observable<Article[]> {
     return this.http.get<Article[]>(`${API_URL}/search?title=${title}`);
   }
+  
+  /**
+   * Récupère les articles des thèmes auxquels l'utilisateur est abonné
+   * @returns Liste des articles filtrés par abonnement
+   */
+  getArticlesFeed(): Observable<Article[]> {
+    return this.http.get<Article[]>(`${API_URL}/feed`);
+  }
 
   /**
    * Crée un nouvel article

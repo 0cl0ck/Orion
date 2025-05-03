@@ -30,16 +30,35 @@ export class ThemesComponent implements OnInit {
   }
 
   /**
-   * Charge tous les thèmes depuis l'API
+   * Charge tous les thèmes depuis l'API et récupère les abonnements de l'utilisateur
    */
   loadThemes() {
     this.loading = true;
     this.error = '';
     
+    // Commencer par récupérer tous les thèmes disponibles
     this.themeService.getAllThemes().subscribe({
-      next: (data) => {
-        this.themes = data;
-        this.loading = false;
+      next: (themes) => {
+        // Stocker temporairement les thèmes
+        const tempThemes = themes;
+        
+        // Ensuite, récupérer les abonnements de l'utilisateur
+        this.themeService.getUserSubscriptions().subscribe({
+          next: (subscribedThemeIds) => {
+            // Mettre à jour l'état d'abonnement de chaque thème
+            this.themes = tempThemes.map(theme => ({
+              ...theme,
+              isSubscribed: subscribedThemeIds.includes(theme.id)
+            }));
+            this.loading = false;
+          },
+          error: (err) => {
+            // En cas d'erreur sur les abonnements, utiliser les thèmes sans info d'abonnement
+            console.error('Erreur lors du chargement des abonnements:', err);
+            this.themes = tempThemes;
+            this.loading = false;
+          }
+        });
       },
       error: (err) => {
         this.error = 'Erreur lors du chargement des thèmes: ' + (err.error?.message || err.message);

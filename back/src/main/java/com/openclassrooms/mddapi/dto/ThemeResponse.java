@@ -13,4 +13,13 @@ public class ThemeResponse {
     private String name;
     private String description;
     private Integer articleCount;
+    private boolean isSubscribed;
+    
+    public void setSubscribed(boolean subscribed) {
+        this.isSubscribed = subscribed;
+    }
+    
+    public boolean isSubscribed() {
+        return this.isSubscribed;
+    }
 }

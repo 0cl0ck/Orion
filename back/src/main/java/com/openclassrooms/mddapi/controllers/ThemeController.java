@@ -2,7 +2,9 @@ package com.openclassrooms.mddapi.controllers;
 
 import com.openclassrooms.mddapi.dto.ThemeRequest;
 import com.openclassrooms.mddapi.dto.ThemeResponse;
+import com.openclassrooms.mddapi.security.services.UserDetailsImpl;
 import com.openclassrooms.mddapi.services.ThemeService;
+import com.openclassrooms.mddapi.services.UserThemeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,10 +17,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import com.openclassrooms.mddapi.exceptions.ErrorResponse;
 import com.openclassrooms.mddapi.repositories.ThemeRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,6 +44,49 @@ public class ThemeController {
     
     @Autowired
     private ThemeRepository themeRepository;
+    
+    @Autowired
+    private UserThemeService userThemeService;
+    
+    @GetMapping("/subscriptions")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Récupérer les thèmes auxquels l'utilisateur est abonné", 
+              description = "Retourne la liste des IDs des thèmes auxquels l'utilisateur connecté est abonné")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Liste des IDs des thèmes récupérée avec succès"),
+            @ApiResponse(responseCode = "401", description = "Non autorisé", 
+                         content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Erreur serveur", 
+                         content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<?> getUserSubscriptions(HttpServletRequest request) {
+        try {
+            // Récupérer l'ID de l'utilisateur connecté
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            Long userId = userDetails.getId();
+            
+            // Récupérer les IDs des thèmes auxquels l'utilisateur est abonné
+            List<Long> subscribedThemeIds = userThemeService.getSubscribedThemeIds(userId);
+            
+            logger.info("Récupération des thèmes auxquels l'utilisateur {} est abonné. Nombre: {}", 
+                       userId, subscribedThemeIds.size());
+            
+            return ResponseEntity.ok(subscribedThemeIds);
+        } catch (Exception e) {
+            logger.error("Erreur lors de la récupération des abonnements: {}", e.getMessage());
+            
+            ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Erreur lors de la récupération des abonnements: " + e.getMessage(),
+                request.getRequestURI()
+            );
+            
+            return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(errorResponse);
+        }
+    }
 
     @GetMapping
     @Operation(summary = "Récupérer tous les thèmes", description = "Retourne la liste de tous les thèmes disponibles")
@@ -46,7 +95,23 @@ public class ThemeController {
                     content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ThemeResponse.class)) })
     })
     public ResponseEntity<List<ThemeResponse>> getAllThemes() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         List<ThemeResponse> themes = themeService.getAllThemes();
+        
+        // Si l'utilisateur est authentifié, marquer les thèmes auxquels il est abonné
+        if (authentication != null && authentication.isAuthenticated() && 
+                authentication.getPrincipal() instanceof UserDetailsImpl) {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            Long userId = userDetails.getId();
+            
+            List<Long> subscribedThemeIds = userThemeService.getSubscribedThemeIds(userId);
+            
+            // Mettre à jour le statut d'abonnement de chaque thème
+            themes.forEach(theme -> {
+                theme.setSubscribed(subscribedThemeIds.contains(theme.getId()));
+            });
+        }
+        
         return new ResponseEntity<>(themes, HttpStatus.OK);
     }
 
@@ -81,6 +146,16 @@ public class ThemeController {
         
         // Le thème existe, continuer avec le service
         ThemeResponse theme = themeService.getThemeById(id);
+        
+        // Vérifier si l'utilisateur est abonné à ce thème
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && 
+                authentication.getPrincipal() instanceof UserDetailsImpl) {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            Long userId = userDetails.getId();
+            theme.setSubscribed(userThemeService.isUserSubscribedToTheme(userId, id));
+        }
+        
         return new ResponseEntity<>(theme, HttpStatus.OK);
     }
 
@@ -194,6 +269,140 @@ public class ThemeController {
             ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Erreur lors de la suppression du thème: " + e.getMessage(),
+                request.getRequestURI()
+            );
+            
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse);
+        }
+    }
+    
+    @PostMapping("/{id}/subscribe")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "S'abonner à un thème", description = "Permet à l'utilisateur connecté de s'abonner à un thème")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Abonnement réussi"),
+            @ApiResponse(responseCode = "404", description = "Thème non trouvé"),
+            @ApiResponse(responseCode = "400", description = "Erreur lors de l'abonnement"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé")
+    })
+    public ResponseEntity<?> subscribeToTheme(
+            @Parameter(description = "ID du thème auquel s'abonner") @PathVariable Long id,
+            HttpServletRequest request) {
+        
+        logger.info("Demande d'abonnement au thème avec l'ID: {}", id);
+        
+        // Vérification de l'existence du thème
+        boolean themeExists = themeRepository.existsById(id);
+        if (!themeExists) {
+            logger.warn("Thème non trouvé avec l'ID: {}", id);
+            
+            ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Thème non trouvé avec l'id: " + id,
+                request.getRequestURI()
+            );
+            
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(errorResponse);
+        }
+        
+        try {
+            // Récupérer l'ID de l'utilisateur connecté
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            Long userId = userDetails.getId();
+            
+            // Abonner l'utilisateur au thème
+            boolean result = userThemeService.subscribeUserToTheme(userId, id);
+            
+            Map<String, Object> response = new HashMap<>();
+            if (result) {
+                response.put("success", true);
+                response.put("message", "Abonnement réussi");
+                logger.info("Utilisateur {} abonné au thème {}", userId, id);
+            } else {
+                response.put("success", false);
+                response.put("message", "Vous êtes déjà abonné à ce thème");
+                logger.info("L'utilisateur {} est déjà abonné au thème {}", userId, id);
+            }
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Erreur lors de l'abonnement au thème: {}", e.getMessage());
+            
+            ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Erreur lors de l'abonnement au thème: " + e.getMessage(),
+                request.getRequestURI()
+            );
+            
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse);
+        }
+    }
+    
+    @PostMapping("/{id}/unsubscribe")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Se désabonner d'un thème", description = "Permet à l'utilisateur connecté de se désabonner d'un thème")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Désabonnement réussi"),
+            @ApiResponse(responseCode = "404", description = "Thème non trouvé"),
+            @ApiResponse(responseCode = "400", description = "Erreur lors du désabonnement"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé")
+    })
+    public ResponseEntity<?> unsubscribeFromTheme(
+            @Parameter(description = "ID du thème auquel se désabonner") @PathVariable Long id,
+            HttpServletRequest request) {
+        
+        logger.info("Demande de désabonnement du thème avec l'ID: {}", id);
+        
+        // Vérification de l'existence du thème
+        boolean themeExists = themeRepository.existsById(id);
+        if (!themeExists) {
+            logger.warn("Thème non trouvé avec l'ID: {}", id);
+            
+            ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Thème non trouvé avec l'id: " + id,
+                request.getRequestURI()
+            );
+            
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(errorResponse);
+        }
+        
+        try {
+            // Récupérer l'ID de l'utilisateur connecté
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            Long userId = userDetails.getId();
+            
+            // Désabonner l'utilisateur du thème
+            boolean result = userThemeService.unsubscribeUserFromTheme(userId, id);
+            
+            Map<String, Object> response = new HashMap<>();
+            if (result) {
+                response.put("success", true);
+                response.put("message", "Désabonnement réussi");
+                logger.info("Utilisateur {} désabonné du thème {}", userId, id);
+            } else {
+                response.put("success", false);
+                response.put("message", "Vous n'êtes pas abonné à ce thème");
+                logger.info("L'utilisateur {} n'est pas abonné au thème {}", userId, id);
+            }
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Erreur lors du désabonnement du thème: {}", e.getMessage());
+            
+            ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Erreur lors du désabonnement du thème: " + e.getMessage(),
                 request.getRequestURI()
             );
             
