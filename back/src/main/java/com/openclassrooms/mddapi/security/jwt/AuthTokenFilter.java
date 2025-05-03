@@ -55,10 +55,13 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             }
             
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+                // Récupérer l'ID de l'utilisateur à partir du token (maintenant stocké dans le sujet)
+                Long userId = jwtUtils.getUserIdFromJwtToken(jwt);
                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
-                logger.info("JWT valide pour l'utilisateur: {}", username);
+                logger.info("JWT valide pour l'utilisateur ID: {} (username: {})", userId, username);
                 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                // Charger l'utilisateur par ID plutôt que par nom d'utilisateur
+                UserDetails userDetails = userDetailsService.loadUserById(userId);
                 logger.info("Utilisateur chargé: {}, Rôles: {}", userDetails.getUsername(), userDetails.getAuthorities());
                 
                 UsernamePasswordAuthenticationToken authentication =

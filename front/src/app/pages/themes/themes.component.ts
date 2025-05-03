@@ -80,7 +80,6 @@ export class ThemesComponent implements OnInit {
     
     this.themeService.subscribeToTheme(themeId).subscribe({
       next: () => {
-        console.log(`Abonnement au thème ${themeId}`);
         // Mettre à jour l'état d'abonnement dans la liste des thèmes
         this.themes = this.themes.map(theme => {
           if (theme.id === themeId) {
@@ -111,7 +110,6 @@ export class ThemesComponent implements OnInit {
     
     this.themeService.unsubscribeFromTheme(themeId).subscribe({
       next: () => {
-        console.log(`Désabonnement du thème ${themeId}`);
         // Mettre à jour l'état d'abonnement dans la liste des thèmes
         this.themes = this.themes.map(theme => {
           if (theme.id === themeId) {
@@ -144,8 +142,7 @@ export class ThemesComponent implements OnInit {
   }
 
   navigateToProfile() {
-    // À implémenter quand la page de profil sera créée
-    console.log('Navigation vers le profil');
+    this.router.navigate(['/profil']);
   }
 
   logout() {

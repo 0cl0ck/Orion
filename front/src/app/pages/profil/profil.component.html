@@ -1,0 +1,104 @@
+<div class="articles-page">
+  <!-- Header -->
+  <header class="app-header">
+    <div class="logo-container">
+      <img src="/assets/logo_p6.png" alt="MDD Logo" class="logo" />
+    </div>
+    <div class="menu-button" (click)="toggleMobileMenu()">
+      <mat-icon>menu</mat-icon>
+    </div>
+    <div class="nav-container" [class.nav-visible]="isMobileMenuOpen">
+      <div class="nav-links-container">
+        <a href="javascript:void(0)" class="logout-link" (click)="logout()">Se déconnecter</a>
+        <div class="nav-links">
+          <a href="javascript:void(0)" (click)="navigateToArticles()">Articles</a>
+          <a href="javascript:void(0)" (click)="navigateToThemes()">Thèmes</a>
+        </div>
+      </div>
+      <div class="profile-container">
+        <button mat-icon-button class="user-profile-btn">
+          <img src="/assets/profile_placeholder.jpg" alt="Profil" class="avatar-img" onerror="this.src='assets/default-avatar.png'" />
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="main-content">
+    <h1 class="page-title">Profil utilisateur</h1>
+    
+    <!-- Formulaire profil utilisateur -->
+    <form class="profile-form" (ngSubmit)="updateProfile()" [formGroup]="profileForm">
+      <div class="form-group">
+        <input type="text" formControlName="username" placeholder="Username" class="form-input" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <input type="email" formControlName="email" placeholder="email@email.fr" class="form-input" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <input type="password" formControlName="password" placeholder="Mot de passe" class="form-input" autocomplete="current-password" />
+      </div>
+      <div *ngIf="error" class="error-message profile-error">
+        {{ error }}
+      </div>
+      <div *ngIf="updateSuccess" class="success-message profile-success">
+        Profil mis à jour avec succès
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="save-button" [disabled]="profileForm.invalid || isUpdating">
+          <span *ngIf="!isUpdating">Sauvegarder</span>
+          <span *ngIf="isUpdating">Mise à jour en cours...</span>
+        </button>
+      </div>
+    </form>
+
+    <!-- Séparateur -->
+    <hr class="section-divider">
+
+    <!-- Abonnements -->
+    <h2 class="section-title">Abonnements</h2>
+      
+    <!-- Indications de chargement et d'erreur -->
+    <div class="status-messages">
+      <div *ngIf="loading" class="loading-message">
+        Chargement des abonnements...
+      </div>
+      <div *ngIf="error" class="error-message">
+        {{ error }}
+      </div>
+    </div>
+
+    <!-- Message si aucun abonnement -->
+    <div *ngIf="!loading && !error && subscribedThemes.length === 0" class="no-subscriptions">
+      <p>Vous n'êtes abonné à aucun thème pour le moment.</p>
+      <p>Pour vous abonner à des thèmes, accédez à la <a (click)="navigateToThemes()">page des thèmes</a>.</p>
+    </div>
+
+    <!-- Liste des thèmes auxquels l'utilisateur est abonné -->
+    <div class="themes-grid" *ngIf="!loading && !error && subscribedThemes.length > 0">
+      <div class="theme-card" *ngFor="let theme of subscribedThemes" (click)="viewThemeArticles(theme.id)">
+        <div class="theme-header">
+          <h2 class="theme-title">{{ theme.name }}</h2>
+        </div>
+        
+        <div class="theme-description" *ngIf="theme.description">
+          {{ theme.description }}
+        </div>
+        <div class="theme-description" *ngIf="!theme.description">
+          Description: Lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard...
+        </div>
+        
+        <div class="theme-action">
+          <button 
+            class="unsubscribe-button"
+            [disabled]="isUnsubscribing && unsubscribingThemeId === theme.id"
+            (click)="unsubscribeFromTheme(theme.id, $event)"
+          >
+            <span *ngIf="!(isUnsubscribing && unsubscribingThemeId === theme.id)">Se désabonner</span>
+            <span *ngIf="isUnsubscribing && unsubscribingThemeId === theme.id">En cours...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

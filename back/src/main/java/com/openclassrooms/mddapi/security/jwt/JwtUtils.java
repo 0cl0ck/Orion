@@ -27,7 +27,8 @@ public class JwtUtils {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         
         return Jwts.builder()
-                .setSubject((userPrincipal.getUsername()))
+                .setSubject(userPrincipal.getId().toString()) // Utilisation de l'ID comme sujet (stable)
+                .claim("username", userPrincipal.getUsername()) // Ajouter le nom d'utilisateur comme une revendication
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key(), SignatureAlgorithm.HS256)
@@ -38,9 +39,27 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
 
-    public String getUserNameFromJwtToken(String token) {
-        return Jwts.parserBuilder().setSigningKey(key()).build()
+    /**
+     * Extrait l'ID utilisateur (sujet) du token JWT
+     * @param token Le token JWT
+     * @return L'identifiant utilisateur
+     */
+    public Long getUserIdFromJwtToken(String token) {
+        String subject = Jwts.parserBuilder().setSigningKey(key()).build()
                 .parseClaimsJws(token).getBody().getSubject();
+        return Long.parseLong(subject);
+    }
+    
+    /**
+     * Extrait le nom d'utilisateur du token JWT (à partir de la revendication username)
+     * Cette méthode est maintenue pour la compatibilité avec le code existant
+     * @param token Le token JWT
+     * @return Le nom d'utilisateur
+     */
+    public String getUserNameFromJwtToken(String token) {
+        // Récupérer l'attribut username à partir des claims
+        return Jwts.parserBuilder().setSigningKey(key()).build()
+                .parseClaimsJws(token).getBody().get("username", String.class);
     }
 
     public boolean validateJwtToken(String authToken) {

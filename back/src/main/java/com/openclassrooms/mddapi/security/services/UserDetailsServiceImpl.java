@@ -28,4 +28,19 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         return UserDetailsImpl.build(user);
     }
+    
+    /**
+     * Charge un utilisateur par son ID pour l'authentification par token JWT
+     * Cette méthode est utilisée lorsque l'ID utilisateur est stocké dans le token JWT
+     * @param id L'identifiant de l'utilisateur
+     * @return Les détails de l'utilisateur
+     * @throws UsernameNotFoundException Si aucun utilisateur n'est trouvé avec cet ID
+     */
+    @Transactional
+    public UserDetails loadUserById(Long id) throws UsernameNotFoundException {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé avec l'ID: " + id));
+        
+        return UserDetailsImpl.build(user);
+    }
 } 

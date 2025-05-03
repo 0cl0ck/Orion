@@ -31,8 +31,7 @@ export class ErrorInterceptor implements HttpInterceptor {
       catchError((error: HttpErrorResponse) => {
         let errorMessage = 'Une erreur inattendue est survenue';
         
-        // Log de l'erreur pour débogage
-        console.error(`[ErrorInterceptor] Erreur HTTP ${error.status}:`, error);
+        // Traitement de l'erreur HTTP
         
         switch (error.status) {
           case 0: 

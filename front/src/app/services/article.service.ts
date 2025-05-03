@@ -70,8 +70,6 @@ export class ArticleService {
    * @param article Les données de l'article à créer
    */
   createArticle(article: any): Observable<Article> {
-    console.log('Debug article à créer:', article);
-    
     // S'assurer que themeId est un nombre (le backend attend un Long)
     const themeId = typeof article.themeId === 'string' ? parseInt(article.themeId, 10) : article.themeId;
     
@@ -84,40 +82,31 @@ export class ArticleService {
       catchError((error: HttpErrorResponse) => {
         let errorMessage = 'Une erreur est survenue lors de la création de l\'article.';
         
-        console.error(`Erreur HTTP ${error.status} lors de la création de l'article:`, error);
-        console.error('Données envoyées au serveur:', { title: article.title, content: article.content?.substring(0, 30) + '...', themeId });
-        
         // Analyse précise par code d'erreur
         switch (error.status) {
           case 401:
             // Problème d'authentification
-            console.error('Erreur 401: Problème d\'authentification - Token invalide ou expiré');
             errorMessage = 'Vous n\'\u00eates pas authentifié ou votre session a expiré. Veuillez vous reconnecter.';
             // Vérifier l'état du token
             const token = this.tokenService.getToken();
-            console.error('Token présent:', !!token);
             break;
             
           case 404:
             // Ressource introuvable (probablement le thème)
-            console.error('Erreur 404: Ressource introuvable - Le thème sélectionné n\'existe pas dans la base de données');
             errorMessage = 'Le thème sélectionné n\'existe pas dans la base de données. Veuillez sélectionner un thème valide.';
             break;
             
           case 400:
             // Données invalides
-            console.error('Erreur 400: Données invalides - Problème de validation des données');
             errorMessage = 'Les données de l\'article sont invalides. Veuillez vérifier et réessayer.';
             break;
             
           case 500:
             // Erreur serveur
-            console.error('Erreur 500: Erreur interne du serveur');
             errorMessage = 'Une erreur est survenue sur le serveur. Veuillez réessayer plus tard.';
             break;
             
           default:
-            console.error(`Erreur inattendue (${error.status}) lors de la création de l'article:`, error);
             errorMessage = `Une erreur inattendue est survenue (${error.status}). Veuillez réessayer plus tard.`;
         }
         

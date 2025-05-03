@@ -81,7 +81,7 @@ export class ThemeService {
     return this.http.get<number[]>(`${API_URL}/subscriptions`)
       .pipe(
         catchError(error => {
-          console.error('Erreur lors de la récupération des abonnements:', error);
+          // En cas d'erreur, retourner un tableau vide
           return of([]);
         })
       );

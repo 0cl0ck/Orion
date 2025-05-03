@@ -101,8 +101,7 @@ export class ArticlesComponent implements OnInit {
   }
 
   navigateToProfile() {
-    // To be implemented when profile page is created
-    console.log('Navigating to profile');
+    this.router.navigate(['/profil']);
   }
 
   logout() {

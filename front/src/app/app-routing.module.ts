@@ -7,6 +7,7 @@ import { ArticlesComponent } from './pages/articles/articles.component';
 import { ArticleCreationComponent } from './pages/article-creation/article-creation.component';
 import { ArticleDetailComponent } from './pages/article-detail/article-detail.component';
 import { ThemesComponent } from './pages/themes/themes.component';
+import { ProfilComponent } from './pages/profil/profil.component';
 import { AuthGuard } from './services/auth.guard';
 
 // consider a guard combined with canLoad / canActivate route option
@@ -19,6 +20,7 @@ const routes: Routes = [
   { path: 'articles/new', component: ArticleCreationComponent, canActivate: [AuthGuard] },
   { path: 'articles/:id', component: ArticleDetailComponent, canActivate: [AuthGuard] },
   { path: 'themes', component: ThemesComponent, canActivate: [AuthGuard] },
+  { path: 'profil', component: ProfilComponent, canActivate: [AuthGuard] },
 ];
 
 @NgModule({

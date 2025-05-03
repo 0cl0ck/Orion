@@ -25,4 +25,20 @@ export class AuthService {
   register(registerRequest: RegisterRequest): Observable<any> {
     return this.http.post(AUTH_API + 'register', registerRequest, httpOptions);
   }
+  
+  /**
+   * Rafraîchit le token après modification du profil
+   * 
+   * @param email Email de l'utilisateur (nouveau ou actuel)
+   * @param password Mot de passe (actuel ou nouveau si modifié)
+   * @returns Observable contenant le nouveau token et les informations utilisateur
+   */
+  refreshToken(email: string, password: string): Observable<any> {
+    console.log('Demande de rafraîchissement du token pour:', email);
+    const loginRequest: LoginRequest = {
+      email: email,
+      password: password
+    };
+    return this.http.post(AUTH_API + 'login', loginRequest, httpOptions);
+  }
 }
