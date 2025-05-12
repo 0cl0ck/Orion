@@ -31,8 +31,31 @@ export class ErrorInterceptor implements HttpInterceptor {
       catchError((error: HttpErrorResponse) => {
         let errorMessage = 'Une erreur inattendue est survenue';
         
-        // Traitement de l'erreur HTTP
-        
+        // Récupération du message d'erreur depuis diverses sources possibles
+        // Par ordre de priorité
+        if (error.error && error.error.message) {
+          // Format habituel pour un objet d'erreur JSON du backend
+          errorMessage = error.error.message;
+        } else if (error.error && typeof error.error === 'string') {
+          // Essayer de parser si c'est une chaîne JSON
+          try {
+            const parsedError = JSON.parse(error.error);
+            if (parsedError.message) {
+              errorMessage = parsedError.message;
+            }
+          } catch (e) {
+            // Ce n'est pas du JSON, utiliser la chaîne complète si possible
+            errorMessage = error.error;
+          }
+        } else if (error.message) {
+          // Message directement sur l'objet d'erreur
+          errorMessage = error.message;
+        } else if (error.statusText) {
+          // Texte du statut HTTP si rien d'autre n'est disponible
+          errorMessage = error.statusText;
+        }
+
+        // Traitement de l'erreur HTTP en fonction du statut
         switch (error.status) {
           case 0: 
             // Erreur de connexion réseau / serveur inaccessible
@@ -41,9 +64,17 @@ export class ErrorInterceptor implements HttpInterceptor {
             
           case 400:
             // Mauvaise requête - Erreur de validation
-            errorMessage = 'Données invalides. Veuillez vérifier les informations saisies.';
-            if (error.error?.message) {
-              errorMessage = error.error.message;
+            // Détection des messages d'erreur spécifiques pour les rendre plus conviviaux
+            if (errorMessage.includes("nom d'utilisateur est déjà utilisé") ||
+                errorMessage.includes("Ce nom d'utilisateur est déjà utilisé")) {
+              errorMessage = "Ce nom d'utilisateur est déjà utilisé par un autre compte.";
+            } 
+            else if (errorMessage.includes("email est déjà utilisé") ||
+                     errorMessage.includes("Cet email est déjà utilisé")) {
+              errorMessage = "Cette adresse email est déjà associée à un autre compte.";
+            }
+            else if (!errorMessage || errorMessage === 'Une erreur inattendue est survenue') {
+              errorMessage = 'Données invalides. Veuillez vérifier les informations saisies.';
             }
             break;
             

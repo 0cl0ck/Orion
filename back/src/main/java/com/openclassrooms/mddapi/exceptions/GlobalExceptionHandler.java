@@ -69,6 +69,110 @@ public class GlobalExceptionHandler {
         
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
+    
+    /**
+     * Gère les IllegalArgumentException (souvent utilisées pour valider les données utilisateur)
+     * et les transforme en réponses HTTP 400 (Bad Request)
+     *
+     * @param ex L'exception IllegalArgumentException lancée
+     * @param request La requête Web
+     * @return Une réponse avec le statut HTTP 400 et un message d'erreur approprié
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
+            IllegalArgumentException ex, WebRequest request) {
+        
+        logger.error("Argument invalide: {}", ex.getMessage());
+        logger.debug("Détails complets de l'exception:", ex);
+        
+        // Message convivial pour les erreurs utilisateur courantes
+        String message = ex.getMessage();
+        if (message != null) {
+            if (message.contains("nom d'utilisateur est déjà utilisé")) {
+                message = "Ce nom d'utilisateur est déjà utilisé par un autre compte.";
+            } 
+            // Détection plus précise pour les emails
+            else if (message.contains("email est déjà utilisé") || message.contains("Cet email est déjà utilisé")) {
+                message = "Cette adresse email est déjà associée à un autre compte.";
+            }
+        }
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                message,
+                request.getDescription(false)
+        );
+        
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+    
+    /**
+     * Gestionnaire pour toutes les exceptions non spécifiquement traitées
+     * Cela inclut les exceptions ResponseStatusException lancées par les contrôleurs
+     *
+     * @param ex L'exception générale
+     * @param request La requête web
+     * @return Une réponse avec le statut HTTP approprié et un message d'erreur
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGlobalException(
+            Exception ex, WebRequest request) {
+        
+        // Détermine le statut HTTP et message en fonction du type d'exception
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Par défaut
+        String message = ex.getMessage();
+        String exceptionName = ex.getClass().getSimpleName();
+        
+        // Logging structuré
+        logger.error("Exception {} : {}", exceptionName, message);
+        if (status.is5xxServerError()) {
+            logger.error("Détails complets de l'exception:", ex);
+        } else {
+            logger.debug("Détails de l'exception:", ex);
+        }
+        
+        // Gérer les ResponseStatusException spécifiquement
+        if (ex instanceof org.springframework.web.server.ResponseStatusException) {
+            org.springframework.web.server.ResponseStatusException rse = 
+                    (org.springframework.web.server.ResponseStatusException) ex;
+            try {
+                status = HttpStatus.valueOf(rse.getStatusCode().value());
+                message = rse.getReason();
+            } catch (Exception e) {
+                logger.warn("Impossible de lire le statut HTTP de ResponseStatusException", e);
+            }
+        }
+
+        // Formater des messages d'erreur conviviaux pour certains cas courants
+        if (message != null) {
+            if (message.contains("nom d'utilisateur est déjà utilisé")) {
+                message = "Ce nom d'utilisateur est déjà utilisé par un autre compte.";
+                status = HttpStatus.BAD_REQUEST;
+            } 
+            // Détection plus précise des messages d'erreur liés aux emails
+            else if (message.contains("email est déjà utilisé") || message.contains("Cet email est déjà utilisé")) {
+                message = "Cette adresse email est déjà associée à un autre compte.";
+                status = HttpStatus.BAD_REQUEST;
+            } else if (message.contains("Utilisateur non trouvé")) {
+                status = HttpStatus.NOT_FOUND;
+            } else if (message.contains("autorisé") || message.contains("authentifié")) {
+                status = HttpStatus.FORBIDDEN;
+            }
+        }
+        
+        // Message par défaut si aucun message n'est disponible ou pour les 500
+        if (message == null || message.isEmpty() || status.is5xxServerError()) {
+            message = "Une erreur est survenue sur le serveur. Veuillez réessayer plus tard.";
+        }
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+                status.value(),
+                message,
+                request.getDescription(false)
+        );
+        
+        return new ResponseEntity<>(errorResponse, status);
+    }
 
     /**
      * Gère les exceptions liées aux URL non trouvées (404 - Not Found)
@@ -123,26 +227,5 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    /**
-     * Gestionnaire pour toutes les autres exceptions non spécifiquement traitées
-     *
-     * @param ex L'exception lancée
-     * @param request La requête Web
-     * @return Une réponse avec le statut HTTP 500 et un message d'erreur
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(
-            Exception ex, WebRequest request) {
-        
-        logger.error("Exception non gérée: {}", ex.getMessage());
-        logger.error("Détails complets de l'exception:", ex);
-        
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Une erreur interne s'est produite. Veuillez réessayer plus tard.",
-                request.getDescription(false)
-        );
-        
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    // La méthode handleGlobalException a été fusionnée avec celle du haut du fichier
 }

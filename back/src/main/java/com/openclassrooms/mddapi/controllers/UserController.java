@@ -108,20 +108,35 @@ public class UserController {
                     content = { @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponse.class)) }),
             @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé", content = @Content),
             @ApiResponse(responseCode = "400", description = "Données invalides", content = @Content),
-            @ApiResponse(responseCode = "403", description = "Accès refusé", content = @Content)
+            @ApiResponse(responseCode = "403", description = "Accès refusé", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur", content = @Content)
     })
     public ResponseEntity<UserResponse> updateUser(
             @Parameter(description = "ID de l'utilisateur à mettre à jour") @PathVariable Long id,
             @Parameter(description = "Nouvelles données de l'utilisateur") @Valid @RequestBody UserRequest userRequest,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         try {
-            return ResponseEntity.ok(userService.updateUser(id, userRequest, userDetails.getId()));
+            System.out.println("UserController: Traitement de la requête updateUser - ID: " + id);
+            System.out.println("UserRequest données: " + userRequest);
+            
+            UserResponse response = userService.updateUser(id, userRequest, userDetails.getId());
+            System.out.println("UserController: Mise à jour réussie pour l'utilisateur ID " + id);
+            return ResponseEntity.ok(response);
         } catch (EntityNotFoundException e) {
+            System.out.println("UserController: EntityNotFoundException lors de la mise à jour - " + e.getMessage());
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (AccessDeniedException e) {
+            System.out.println("UserController: AccessDeniedException lors de la mise à jour - " + e.getMessage());
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
         } catch (IllegalArgumentException e) {
+            // Notre gestionnaire global d'exceptions se chargera de transformer ce message d'erreur
+            // en réponse conviviale avec le bon code HTTP
+            System.out.println("UserController: IllegalArgumentException lors de la mise à jour - " + e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (Exception e) {
+            System.out.println("UserController: Exception inattendue lors de la mise à jour - " + e.getClass().getName() + ": " + e.getMessage());
+            e.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Une erreur est survenue lors de la mise à jour du profil.");
         }
     }
 

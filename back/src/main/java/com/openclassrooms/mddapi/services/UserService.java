@@ -86,42 +86,66 @@ public class UserService {
      */
     @Transactional
     public UserResponse updateUser(Long id, UserRequest userRequest, Long currentUserId) {
-        // Vérifier si l'utilisateur essaie de modifier un autre compte que le sien
-        if (!id.equals(currentUserId)) {
-            throw new AccessDeniedException("Vous n'êtes pas autorisé à modifier cet utilisateur");
-        }
-
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec l'id : " + id));
-
-        // Mettre à jour les champs modifiables
-        if (userRequest.getUsername() != null && !userRequest.getUsername().isEmpty()) {
-            // Vérifier si le nouveau nom d'utilisateur existe déjà (sauf s'il s'agit du même utilisateur)
-            Optional<User> existingUser = userRepository.findByUsername(userRequest.getUsername());
-            if (existingUser.isPresent() && !existingUser.get().getId().equals(id)) {
-                throw new IllegalArgumentException("Ce nom d'utilisateur est déjà utilisé");
-            }
-            user.setUsername(userRequest.getUsername());
-        }
-
-        if (userRequest.getEmail() != null && !userRequest.getEmail().isEmpty()) {
-            // Vérifier si le nouvel email existe déjà (sauf s'il s'agit du même utilisateur)
-            Optional<User> existingUser = userRepository.findByEmail(userRequest.getEmail());
-            if (existingUser.isPresent() && !existingUser.get().getId().equals(id)) {
-                throw new IllegalArgumentException("Cet email est déjà utilisé");
-            }
-            user.setEmail(userRequest.getEmail());
-        }
-
-        // Si un nouveau mot de passe est fourni, le hasher
-        if (userRequest.getPassword() != null && !userRequest.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-        }
-
-        user.setUpdatedAt(LocalDateTime.now());
+        System.out.println("Tentative de mise à jour de l'utilisateur - ID: " + id + ", currentUserId: " + currentUserId);
+        System.out.println("Données reçues: username=" + userRequest.getUsername() + ", email=" + userRequest.getEmail() + ", password présent: " + (userRequest.getPassword() != null && !userRequest.getPassword().isEmpty()));
         
-        User updatedUser = userRepository.save(user);
-        return mapToUserResponse(updatedUser);
+        try {
+            // Vérifier si l'utilisateur essaie de modifier un autre compte que le sien
+            if (!id.equals(currentUserId)) {
+                System.out.println("Erreur: Tentative de modification d'un autre compte");
+                throw new AccessDeniedException("Vous n'êtes pas autorisé à modifier cet utilisateur");
+            }
+
+            System.out.println("Recherche de l'utilisateur dans la base de données");
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> {
+                        System.out.println("Erreur: Utilisateur non trouvé avec l'id: " + id);
+                        return new EntityNotFoundException("Utilisateur non trouvé avec l'id : " + id);
+                    });
+            System.out.println("Utilisateur trouvé: " + user.getUsername() + " (" + user.getEmail() + ")");
+
+            // Mettre à jour les champs modifiables
+            if (userRequest.getUsername() != null && !userRequest.getUsername().isEmpty()) {
+                System.out.println("Vérification si le nom d'utilisateur " + userRequest.getUsername() + " existe déjà");
+                // Vérifier si le nouveau nom d'utilisateur existe déjà (sauf s'il s'agit du même utilisateur)
+                Optional<User> existingUser = userRepository.findByUsername(userRequest.getUsername());
+                if (existingUser.isPresent() && !existingUser.get().getId().equals(id)) {
+                    System.out.println("Erreur: Nom d'utilisateur déjà utilisé par un autre utilisateur");
+                    throw new IllegalArgumentException("Ce nom d'utilisateur est déjà utilisé");
+                }
+                System.out.println("Mise à jour du nom d'utilisateur: " + user.getUsername() + " -> " + userRequest.getUsername());
+                user.setUsername(userRequest.getUsername());
+            }
+
+            if (userRequest.getEmail() != null && !userRequest.getEmail().isEmpty()) {
+                System.out.println("Vérification si l'email " + userRequest.getEmail() + " existe déjà");
+                // Vérifier si le nouvel email existe déjà (sauf s'il s'agit du même utilisateur)
+                Optional<User> existingUser = userRepository.findByEmail(userRequest.getEmail());
+                if (existingUser.isPresent() && !existingUser.get().getId().equals(id)) {
+                    System.out.println("Erreur: Email déjà utilisé par un autre utilisateur");
+                    throw new IllegalArgumentException("Cet email est déjà utilisé");
+                }
+                System.out.println("Mise à jour de l'email: " + user.getEmail() + " -> " + userRequest.getEmail());
+                user.setEmail(userRequest.getEmail());
+            }
+
+            // Si un nouveau mot de passe est fourni, le hasher
+            if (userRequest.getPassword() != null && !userRequest.getPassword().isEmpty()) {
+                System.out.println("Mise à jour du mot de passe");
+                user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+            }
+
+            user.setUpdatedAt(LocalDateTime.now());
+            
+            System.out.println("Sauvegarde des modifications dans la base de données");
+            User updatedUser = userRepository.save(user);
+            System.out.println("Utilisateur mis à jour avec succès");
+            return mapToUserResponse(updatedUser);
+        } catch (Exception e) {
+            System.out.println("Une exception s'est produite lors de la mise à jour du profil: " + e.getClass().getName() + ": " + e.getMessage());
+            e.printStackTrace();
+            throw e; // Relancer l'exception pour la gestion standard
+        }
     }
 
     /**

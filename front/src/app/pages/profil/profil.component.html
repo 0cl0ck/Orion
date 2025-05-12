@@ -39,10 +39,10 @@
         <input type="password" formControlName="password" placeholder="Mot de passe" class="form-input" autocomplete="current-password" />
       </div>
       <div *ngIf="error" class="error-message profile-error">
-        {{ error }}
+        <span class="error-icon">⚠️</span> {{ error }}
       </div>
       <div *ngIf="updateSuccess" class="success-message profile-success">
-        Profil mis à jour avec succès
+        <span class="success-icon">✓</span> Profil mis à jour avec succès
       </div>
       <div class="form-actions">
         <button type="submit" class="save-button" [disabled]="profileForm.invalid || isUpdating">

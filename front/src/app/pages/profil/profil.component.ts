@@ -227,9 +227,43 @@ export class ProfilComponent implements OnInit {
         }, 3000);
       },
       error: (err) => {
-        this.error = 'Erreur lors de la mise à jour du profil: ' + (err.error?.message || err.message);
+        // Gérer différentes formes d'objets d'erreur
+        if (typeof err === 'object') {
+          // Si l'erreur contient directement un message (format intercepteur)
+          if (err.message) {
+            this.error = err.message;
+          }
+          // Si l'erreur est un HttpErrorResponse original
+          else if (err.error?.message) {
+            this.error = err.error.message;
+          }
+          // Si l'erreur a un 'originalError' (structure observée dans les logs)
+          else if (err.originalError?.message) {
+            this.error = err.originalError.message;
+          }
+          // Fallback générique
+          else {
+            this.error = 'Erreur lors de la mise à jour du profil';
+          }
+        } else {
+          // Si l'erreur est une chaîne de caractères simple
+          this.error = err.toString();
+        }
+        
         this.isUpdating = false;
         console.error('Erreur:', err);
+        
+        // S'assurer que l'erreur est visible à l'utilisateur
+        // Faire défiler la page vers l'élément d'erreur
+        setTimeout(() => {
+          const errorElement = document.querySelector('.profile-error');
+          if (errorElement) {
+            errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+        
+        // Recharger les abonnements en cas d'erreur pour maintenir l'affichage
+        this.loadUserSubscriptions();
       }
     });
   }
