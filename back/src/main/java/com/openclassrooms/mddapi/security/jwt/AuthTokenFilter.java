@@ -17,6 +17,17 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Filtre d'authentification JWT qui intercepte chaque requête HTTP pour vérifier 
+ * la présence et la validité d'un token JWT.
+ * 
+ * Ce filtre s'exécute une fois par requête (OncePerRequestFilter) et vérifie si la requête 
+ * contient un token JWT valide dans l'en-tête Authorization. Si c'est le cas, il extrait 
+ * l'identifiant utilisateur du token, charge les détails de l'utilisateur et configure 
+ * le contexte de sécurité Spring Security.
+ * 
+ * Le filtre utilise JwtUtils pour valider le token et extraire les informations utilisateur.
+ */
 public class AuthTokenFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtils jwtUtils;
@@ -26,43 +37,35 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthTokenFilter.class);
 
+    /**
+     * Méthode principale du filtre qui traite chaque requête HTTP.
+     * Extrait et valide le token JWT, puis configure le contexte de sécurité si le token est valide.
+     * 
+     * @param request La requête HTTP entrante
+     * @param response La réponse HTTP sortante
+     * @param filterChain La chaîne de filtres pour continuer le traitement
+     * @throws ServletException En cas d'erreur liée au servlet
+     * @throws IOException En cas d'erreur d'entrée/sortie
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         
-        // Ajout de logs détaillés pour le debugging
-        String requestURI = request.getRequestURI();
-        String method = request.getMethod();
-        logger.info("========== DÉBUT DE TRAITEMENT DE REQUÊTE ==========");
-        logger.info("Requête reçue: {} {}", method, requestURI);
-        
-        // Log des en-têtes
-        logger.info("En-têtes de la requête:");
-        java.util.Enumeration<String> headerNames = request.getHeaderNames();
-        while (headerNames.hasMoreElements()) {
-            String headerName = headerNames.nextElement();
-            logger.info("  {}: {}", headerName, request.getHeader(headerName));
-        }
-        
         try {
             String jwt = parseJwt(request);
             
-            // Log le token extrait
-            if (jwt != null) {
-                logger.info("JWT extrait de l'en-tête Authorization: {}...", jwt.substring(0, Math.min(20, jwt.length())));
-            } else {
-                logger.warn("Aucun JWT trouvé dans la requête");
-            }
-            
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-                // Récupérer l'ID de l'utilisateur à partir du token (maintenant stocké dans le sujet)
+                // Récupérer l'ID de l'utilisateur à partir du token
                 Long userId = jwtUtils.getUserIdFromJwtToken(jwt);
                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
-                logger.info("JWT valide pour l'utilisateur ID: {} (username: {})", userId, username);
                 
-                // Charger l'utilisateur par ID plutôt que par nom d'utilisateur
+                // Log minimal pour le débogage
+                if (logger.isDebugEnabled()) {
+                    logger.debug("JWT valide pour l'utilisateur: {}", username);
+                }
+                
+                // Charger l'utilisateur par ID
                 UserDetails userDetails = userDetailsService.loadUserById(userId);
-                logger.info("Utilisateur chargé: {}, Rôles: {}", userDetails.getUsername(), userDetails.getAuthorities());
                 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
@@ -72,26 +75,25 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                logger.info("Authentification définie dans le contexte de sécurité");
-            } else if (jwt != null) {
-                logger.error("JWT présent mais invalide!");
             }
         } catch (Exception e) {
-            logger.error("Impossible de définir l'authentification utilisateur pour {} {}: {}", method, requestURI, e.getMessage());
-            logger.error("Exception complète:", e);
+            logger.error("Erreur d'authentification: {}", e.getMessage());
+            // Pour le débogage, on peut activer le stack trace complet si nécessaire
+            if (logger.isDebugEnabled()) {
+                logger.debug("Détails de l'exception:", e);
+            }
         }
-        
-        // Log avant de passer la requête au filtre suivant
-        logger.info("État d'authentification avant de continuer: {}", 
-                    (SecurityContextHolder.getContext().getAuthentication() != null ? 
-                    "Authentifié (" + SecurityContextHolder.getContext().getAuthentication().getName() + ")" : 
-                    "Non authentifié"));
-        logger.info("Passage au filtre suivant");
-        logger.info("========== FIN DE LOGS PRÉLIMINAIRES ==========");
         
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Extrait le token JWT de l'en-tête Authorization de la requête HTTP.
+     * Le format attendu est "Bearer [token]"
+     * 
+     * @param request La requête HTTP
+     * @return Le token JWT extrait, ou null si aucun token n'est présent ou valide
+     */
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
 

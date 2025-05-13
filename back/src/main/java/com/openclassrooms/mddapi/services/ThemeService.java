@@ -101,6 +101,15 @@ public class ThemeService {
     }
     
     /**
+     * Vérifie si un thème existe par son identifiant
+     * @param id Identifiant du thème
+     * @return true si le thème existe, false sinon
+     */
+    public boolean existsById(Long id) {
+        return themeRepository.existsById(id);
+    }
+    
+    /**
      * Transforme une entité Theme en DTO de réponse
      * @param theme Entité Theme à transformer
      * @return DTO de réponse contenant les données du thème

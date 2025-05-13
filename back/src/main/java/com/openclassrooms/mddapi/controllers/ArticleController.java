@@ -6,6 +6,8 @@ import com.openclassrooms.mddapi.dto.MessageResponse;
 import com.openclassrooms.mddapi.exceptions.ErrorResponse;
 import com.openclassrooms.mddapi.security.services.UserDetailsImpl;
 import com.openclassrooms.mddapi.services.ArticleService;
+import com.openclassrooms.mddapi.services.ThemeService;
+import com.openclassrooms.mddapi.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -44,10 +46,10 @@ public class ArticleController {
     private ArticleService articleService;
     
     @Autowired
-    private com.openclassrooms.mddapi.repositories.ThemeRepository themeRepository;
+    private ThemeService themeService;
     
     @Autowired
-    private com.openclassrooms.mddapi.repositories.UserRepository userRepository;
+    private UserService userService;
 
     /**
      * Récupère tous les articles
@@ -102,7 +104,7 @@ public class ArticleController {
         logger.info("Récupération des articles pour le thème ID: {}", themeId);
         
         // Vérification préalable de l'existence du thème
-        boolean themeExists = themeRepository.existsById(themeId);
+        boolean themeExists = themeService.existsById(themeId);
         if (!themeExists) {
             logger.warn("Thème non trouvé avec l'ID: {}", themeId);
             
@@ -141,7 +143,7 @@ public class ArticleController {
         logger.info("Récupération des articles pour l'utilisateur ID: {}", userId);
         
         // Vérification préalable de l'existence de l'utilisateur
-        boolean userExists = userRepository.existsById(userId);
+        boolean userExists = userService.existsById(userId);
         if (!userExists) {
             logger.warn("Utilisateur non trouvé avec l'ID: {}", userId);
             
@@ -265,7 +267,7 @@ public class ArticleController {
         logger.info("  - ThemeId: {}", articleRequest.getThemeId());
         
         // Vérification préalable de l'existence du thème pour éviter l'exception EntityNotFoundException
-        boolean themeExists = themeRepository.existsById(articleRequest.getThemeId());
+        boolean themeExists = themeService.existsById(articleRequest.getThemeId());
         if (!themeExists) {
             logger.error("Le thème avec l'ID {} n'existe pas", articleRequest.getThemeId());
             logger.info("========== FIN DE CRÉATION D'ARTICLE (ÉCHEC) ==========");

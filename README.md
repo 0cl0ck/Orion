@@ -1,14 +1,16 @@
-# Orion - Réseau Social pour Développeurs
+# Orion - Réseau Social pour Développeurs (MDD)
 
 Orion est une application full-stack développée avec Angular et Spring Boot qui permet aux développeurs de partager des articles, d'échanger sur différents thèmes techniques et de construire une communauté professionnelle.
 
 ## Aperçu du Projet
 
-Cette application comprend les fonctionnalités suivantes :
-- Système d'authentification (inscription/connexion)
+Cette application, nommée MDD (Monde de Dév), est un réseau social dédié aux développeurs qui vise à faciliter le partage de connaissances et la mise en relation entre professionnels du développement. Le MVP (Minimum Viable Product) comprend les fonctionnalités suivantes :
+
+- Système d'authentification sécurisé (inscription/connexion avec JWT)
 - Création et publication d'articles techniques
-- Exploration d'articles par thèmes
+- Abonnement et exploration d'articles par thèmes
 - Gestion de profil utilisateur
+- Commentaires sur les articles
 - Interface utilisateur moderne et responsive
 
 ## Structure du Projet
@@ -23,23 +25,26 @@ Cette application comprend les fonctionnalités suivantes :
 
 ### Frontend
 - Angular 14
-- Angular Material
+- Angular Material pour l'interface utilisateur
 - TypeScript
-- SCSS
-- RxJS
+- SCSS pour les styles
+- RxJS pour la programmation réactive
+- Reactive Forms pour la gestion des formulaires
 
 ### Backend
-- Spring Boot
-- Spring Security avec JWT
-- Spring Data JPA
-- Java 17+
-- Base de données (configurée dans application.properties)
+- Spring Boot 3.2.3
+- Spring Security avec JWT pour l'authentification
+- Spring Data JPA pour la persistance des données
+- Java 21
+- Lombok pour la réduction du code boilerplate
+- Spring Boot Actuator pour le monitoring
+- MySQL 8.0+ comme base de données
 
 ## Installation et Démarrage
 
 ### Prérequis
 - Node.js et npm
-- JDK 17 ou supérieur
+- JDK 21 (recommandé) ou JDK 17 minimum
 - Maven
 - MySQL 8.0+
 
@@ -137,6 +142,40 @@ spring.datasource.password=votre_mot_de_passe
 - `/api/themes/*` - Gestion des thèmes
 - `/api/users/*` - Gestion des utilisateurs
 
-## Sécurité
+## Architecture et Sécurité
 
-L'application utilise Spring Security avec JWT pour l'authentification et la protection des routes.
+### Architecture en Couches
+
+L'application backend suit une architecture en couches classique :
+
+- **Couche Controller** : Points d'entrée de l'API REST, gestion des requêtes HTTP
+- **Couche Service** : Logique métier et orchestration des opérations
+- **Couche Repository** : Accès aux données et persistance
+- **Couche Model** : Entités JPA et objets de transfert de données (DTO)
+
+Cette séparation des responsabilités permet une meilleure maintenabilité et testabilité du code.
+
+### Sécurité
+
+L'application implémente plusieurs niveaux de sécurité :
+
+- **Authentification JWT** : Tokens JWT pour l'authentification stateless
+- **Autorisation basée sur les rôles** : Contrôle d'accès aux ressources selon le rôle utilisateur
+- **Validation des données** : Validation des entrées utilisateur côté serveur et client
+- **Headers de sécurité HTTP** : Protection contre les attaques web courantes
+  - Content-Security-Policy
+  - X-Frame-Options
+  - Cache-Control
+- **Hachage des mots de passe** : Utilisation de BCrypt pour le stockage sécurisé
+- **Annotations @PreAuthorize** : Sécurité au niveau des méthodes
+
+### Monitoring avec Spring Boot Actuator
+
+Spring Boot Actuator est configuré pour fournir des informations sur l'état de l'application :
+
+- `/actuator/health` : État de santé de l'application (accessible publiquement)
+- `/actuator/info` : Informations sur l'application (accessible publiquement)
+- `/actuator/metrics` : Métriques de l'application (accès restreint aux administrateurs)
+- `/actuator/env` : Variables d'environnement (accès restreint aux administrateurs)
+
+Ces endpoints permettent de surveiller l'application en production et de diagnostiquer rapidement les problèmes.

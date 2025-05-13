@@ -1,12 +1,18 @@
 package com.openclassrooms.mddapi.models;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"articles", "comments"})  // Évite les boucles infinies avec les relations
+@EqualsAndHashCode(of = "id")  // Se base uniquement sur l'ID pour les comparaisons
 @Table(name = "users")
 public class User {
     @Id

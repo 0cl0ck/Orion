@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import com.openclassrooms.mddapi.exceptions.ErrorResponse;
-import com.openclassrooms.mddapi.repositories.ThemeRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,9 +40,6 @@ public class ThemeController {
 
     @Autowired
     private ThemeService themeService;
-    
-    @Autowired
-    private ThemeRepository themeRepository;
     
     @Autowired
     private UserThemeService userThemeService;
@@ -129,7 +125,7 @@ public class ThemeController {
         logger.info("Récupération du thème avec l'ID: {}", id);
         
         // Vérification préalable de l'existence du thème
-        boolean themeExists = themeRepository.existsById(id);
+        boolean themeExists = themeService.existsById(id);
         if (!themeExists) {
             logger.warn("Thème non trouvé avec l'ID: {}", id);
             
@@ -197,7 +193,7 @@ public class ThemeController {
         logger.info("Nouvelles données: {}", themeRequest);
         
         // Vérification préalable de l'existence du thème
-        boolean themeExists = themeRepository.existsById(id);
+        boolean themeExists = themeService.existsById(id);
         if (!themeExists) {
             logger.warn("Thème non trouvé avec l'ID: {}", id);
             
@@ -245,7 +241,7 @@ public class ThemeController {
         logger.info("Suppression du thème avec l'ID: {}", id);
         
         // Vérification préalable de l'existence du thème
-        boolean themeExists = themeRepository.existsById(id);
+        boolean themeExists = themeService.existsById(id);
         if (!themeExists) {
             logger.warn("Thème non trouvé avec l'ID: {}", id);
             
@@ -294,7 +290,7 @@ public class ThemeController {
         logger.info("Demande d'abonnement au thème avec l'ID: {}", id);
         
         // Vérification de l'existence du thème
-        boolean themeExists = themeRepository.existsById(id);
+        boolean themeExists = themeService.existsById(id);
         if (!themeExists) {
             logger.warn("Thème non trouvé avec l'ID: {}", id);
             
@@ -361,7 +357,7 @@ public class ThemeController {
         logger.info("Demande de désabonnement du thème avec l'ID: {}", id);
         
         // Vérification de l'existence du thème
-        boolean themeExists = themeRepository.existsById(id);
+        boolean themeExists = themeService.existsById(id);
         if (!themeExists) {
             logger.warn("Thème non trouvé avec l'ID: {}", id);
             

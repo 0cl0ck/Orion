@@ -187,6 +187,15 @@ public class UserService {
     }
     
     /**
+     * Vérifie si un utilisateur existe par son ID
+     * @param id Identifiant de l'utilisateur à vérifier
+     * @return true si l'utilisateur existe, false sinon
+     */
+    public boolean existsById(Long id) {
+        return userRepository.existsById(id);
+    }
+    
+    /**
      * Transforme une entité User en DTO de réponse
      * @param user Entité User à transformer
      * @return DTO de réponse contenant les données de l'utilisateur

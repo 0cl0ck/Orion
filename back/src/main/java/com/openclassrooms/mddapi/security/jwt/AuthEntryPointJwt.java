@@ -16,6 +16,16 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.io.IOException;
 
+/**
+ * Point d'entrée pour gérer les erreurs d'authentification dans l'application.
+ * 
+ * Cette classe est appelée automatiquement par Spring Security lorsqu'une exception
+ * d'authentification se produit, typiquement quand un utilisateur non authentifié
+ * tente d'accéder à une ressource protégée.
+ * 
+ * Elle gère la création d'une réponse d'erreur formatée en JSON avec le code
+ * d'état HTTP approprié (401 Unauthorized ou 404 Not Found dans certains cas spéciaux).
+ */
 @Component
 public class AuthEntryPointJwt implements AuthenticationEntryPoint {
 
@@ -24,20 +34,33 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
     @Autowired
     private ObjectMapper objectMapper;
 
+    /**
+     * Méthode appelée lorsqu'une exception d'authentification est levée.
+     * Gère la création d'une réponse d'erreur appropriée.
+     * 
+     * Cette méthode détecte également les cas où une EntityNotFoundException
+     * a été transformée en erreur d'authentification et renvoie alors
+     * une réponse 404 Not Found au lieu d'une 401 Unauthorized.
+     * 
+     * @param request La requête HTTP qui a provoqué l'erreur
+     * @param response La réponse HTTP à envoyer au client
+     * @param authException L'exception d'authentification levée
+     * @throws IOException En cas d'erreur lors de l'écriture de la réponse
+     */
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
-        logger.error("Erreur d'authentification: {}", authException.getMessage());
+        // Log minimal pour les erreurs d'authentification
+        if (logger.isDebugEnabled()) {
+            logger.debug("Erreur d'authentification: {}", authException.getMessage());
+        }
         
         // Vérifier si l'erreur provient d'une ressource non trouvée (qui ne devrait pas être 401)
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
         if (requestAttributes instanceof ServletRequestAttributes) {
-            // Si l'exception originale est stockée dans les attributs de la requête,
-            // on peut l'utiliser pour déterminer la vraie nature de l'erreur
             Object originalException = request.getAttribute("jakarta.servlet.error.exception");
             if (originalException != null && originalException.toString().contains("EntityNotFoundException")) {
                 // C'est une erreur 404 déguisée, pas une erreur d'authentification
-                logger.warn("Intercepté une EntityNotFoundException qui aurait été transformée en 401");
                 sendErrorResponse(response, HttpServletResponse.SC_NOT_FOUND, "Ressource non trouvée");
                 return;
             }
@@ -47,6 +70,14 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
         sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Non autorisé: " + authException.getMessage());
     }
     
+    /**
+     * Envoie une réponse d'erreur formatée en JSON au client.
+     * 
+     * @param response La réponse HTTP à envoyer au client
+     * @param status Le code d'état HTTP à utiliser (401, 404, etc.)
+     * @param message Le message d'erreur à inclure dans la réponse
+     * @throws IOException En cas d'erreur lors de l'écriture de la réponse
+     */
     private void sendErrorResponse(HttpServletResponse response, int status, String message) throws IOException {
         response.setStatus(status);
         response.setContentType("application/json");

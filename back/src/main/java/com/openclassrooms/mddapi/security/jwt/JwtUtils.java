@@ -13,6 +13,16 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Date;
 
+/**
+ * Classe utilitaire pour la gestion des tokens JWT (JSON Web Token).
+ * 
+ * Cette classe fournit des méthodes pour générer, valider et extraire des informations
+ * des tokens JWT utilisés pour l'authentification et l'autorisation dans l'application.
+ * 
+ * Les tokens JWT contiennent l'ID utilisateur comme sujet et le nom d'utilisateur comme claim.
+ * Ils sont signés avec un secret configuré dans les propriétés de l'application et ont
+ * une durée de validité configurable.
+ */
 @Component
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
@@ -23,6 +33,12 @@ public class JwtUtils {
     @Value("${jwt.expiration}")
     private int jwtExpirationMs;
 
+    /**
+     * Génère un token JWT à partir des informations d'authentification.
+     * 
+     * @param authentication L'objet Authentication contenant les détails de l'utilisateur connecté
+     * @return Un token JWT signé contenant l'ID utilisateur comme sujet et le nom d'utilisateur comme claim
+     */
     public String generateJwtToken(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         
@@ -35,6 +51,11 @@ public class JwtUtils {
                 .compact();
     }
     
+    /**
+     * Crée une clé HMAC-SHA à partir du secret JWT configuré.
+     * 
+     * @return La clé utilisée pour signer les tokens JWT
+     */
     private Key key() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
@@ -62,18 +83,30 @@ public class JwtUtils {
                 .parseClaimsJws(token).getBody().get("username", String.class);
     }
 
+    /**
+     * Valide un token JWT.
+     * 
+     * @param authToken Le token JWT à valider
+     * @return true si le token est valide, false sinon
+     */
     public boolean validateJwtToken(String authToken) {
         try {
             Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(authToken);
             return true;
         } catch (MalformedJwtException e) {
-            logger.error("Token JWT invalide: {}", e.getMessage());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Token JWT invalide: {}", e.getMessage());
+            }
         } catch (ExpiredJwtException e) {
-            logger.error("Token JWT expiré: {}", e.getMessage());
+            logger.warn("Token JWT expiré");
         } catch (UnsupportedJwtException e) {
-            logger.error("Token JWT non supporté: {}", e.getMessage());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Token JWT non supporté: {}", e.getMessage());
+            }
         } catch (IllegalArgumentException e) {
-            logger.error("La chaîne de revendications JWT est vide: {}", e.getMessage());
+            if (logger.isDebugEnabled()) {
+                logger.debug("La chaîne de revendications JWT est vide: {}", e.getMessage());
+            }
         }
 
         return false;
