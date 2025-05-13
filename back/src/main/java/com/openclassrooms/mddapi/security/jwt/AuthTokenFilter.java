@@ -77,10 +77,11 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
-            logger.error("Erreur d'authentification: {}", e.getMessage());
-            // Pour le débogage, on peut activer le stack trace complet si nécessaire
+            // Log minimal, sans exposer trop de détails
+            logger.error("Erreur lors de la validation du token JWT");
+            // Uniquement en mode debug, on ajoute plus de détails
             if (logger.isDebugEnabled()) {
-                logger.debug("Détails de l'exception:", e);
+                logger.debug("Cause: {}", e.getClass().getSimpleName());
             }
         }
         

@@ -247,7 +247,7 @@ public class ArticleController {
             @Valid @RequestBody ArticleRequest articleRequest,
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             HttpServletRequest request) {
-        logger.info("========== DÉBUT DE CRÉATION D'ARTICLE ==========");
+        logger.debug("Début de création d'article");
         
         // Vérifier l'authentification
         if (userDetails == null) {
@@ -259,7 +259,9 @@ public class ArticleController {
         }
         
         // Vérifier les données de la requête
-        logger.info("Données de l'article: {}", articleRequest);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Données de la requête d'article reçues");
+        }
         logger.info("  - Titre: {}", articleRequest.getTitle());
         logger.info("  - Contenu: {} (longueur: {})", 
             (articleRequest.getContent() != null ? articleRequest.getContent().substring(0, Math.min(30, articleRequest.getContent().length())) + "..." : "null"),
@@ -287,17 +289,13 @@ public class ArticleController {
             logger.info("Appel du service pour créer l'article...");
             ArticleResponse createdArticle = articleService.createArticle(articleRequest, userDetails.getId());
             logger.info("Article créé avec succès! ID={}", createdArticle.getId());
-            logger.info("========== FIN DE CRÉATION D'ARTICLE (SUCCÈS) ==========");
+            logger.info("Article créé avec succès: ID={}", createdArticle.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(createdArticle);
         } catch (EntityNotFoundException e) {
-            logger.error("Erreur lors de la création de l'article: {}", e.getMessage());
-            logger.error("Exception complète:", e);
-            logger.info("========== FIN DE CRÉATION D'ARTICLE (ÉCHEC) ==========");
+            logger.error("Erreur lors de la création de l'article (EntityNotFound): {}", e.getMessage());
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (Exception e) {
             logger.error("Exception non prévue lors de la création de l'article: {}", e.getMessage());
-            logger.error("Exception complète:", e);
-            logger.info("========== FIN DE CRÉATION D'ARTICLE (ÉCHEC) ==========");
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erreur lors de la création de l'article");
         }
     }

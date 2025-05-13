@@ -42,8 +42,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleEntityNotFoundException(
             EntityNotFoundException ex, WebRequest request) {
         
-        logger.error("Entité non trouvée: {}", ex.getMessage());
-        logger.debug("Détails complets de l'exception:", ex);
+        logger.warn("Entité non trouvée: {}", ex.getMessage().replaceAll("(id|ID|Id)\\s*[=:]\\s*\\d+", "[ID masqué]"));
+        // Ne pas logger les stack traces en production
         
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
@@ -66,8 +66,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalStateException(
             IllegalStateException ex, WebRequest request) {
         
-        logger.error("État illégal: {}", ex.getMessage());
-        logger.debug("Détails complets de l'exception:", ex);
+        logger.warn("Accès non autorisé détecté");
+        // Ne pas logger les stack traces en production
         
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.FORBIDDEN.value(),
@@ -90,8 +90,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
             IllegalArgumentException ex, WebRequest request) {
         
-        logger.error("Argument invalide: {}", ex.getMessage());
-        logger.debug("Détails complets de l'exception:", ex);
+        logger.warn("Données utilisateur invalides détectées");
+        // Ne pas logger les stack traces en production
         
         // Message convivial pour les erreurs utilisateur courantes
         String message = ex.getMessage();
@@ -129,13 +129,11 @@ public class GlobalExceptionHandler {
         // Détermine le statut HTTP et message en fonction du type d'exception
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Par défaut
         String message = ex.getMessage();
-        String exceptionName = ex.getClass().getSimpleName();
         
         // Logging structuré
-        logger.error("Exception {} : {}", exceptionName, message);
-        if (status.is5xxServerError()) {
-            logger.error("Détails complets de l'exception:", ex);
-        } else {
+        logger.error("Exception non gérée: {} ({})", ex.getClass().getSimpleName(), ex.getMessage() != null ? ex.getMessage().substring(0, Math.min(50, ex.getMessage().length())) : "aucun message");
+        // En production, nous limitons les détails des exceptions 5xx aux logs
+        if (status.is5xxServerError() && logger.isDebugEnabled()) {
             logger.debug("Détails de l'exception:", ex);
         }
         
@@ -206,7 +204,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleMethodNotSupported(
             HttpRequestMethodNotSupportedException ex, WebRequest request) {
         
-        logger.error("Méthode non supportée: {}", ex.getMessage());
+        logger.warn("Méthode HTTP non supportée: {}", ex.getMethod());
         
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.METHOD_NOT_ALLOWED.value(),
@@ -224,7 +222,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
             HttpMessageNotReadableException ex, WebRequest request) {
         
-        logger.error("Format de données invalide: {}", ex.getMessage());
+        logger.warn("Format de données invalide reçu");
         
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
@@ -254,7 +252,7 @@ public class GlobalExceptionHandler {
                 .map(entry -> entry.getKey() + ": " + entry.getValue())
                 .collect(Collectors.joining(", "));
         
-        logger.error("Erreur de validation: {}", errorMessage);
+        logger.warn("Validation des données utilisateur échouée");
         
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
@@ -276,7 +274,7 @@ public class GlobalExceptionHandler {
                 .map(ConstraintViolation::getMessage)
                 .collect(Collectors.joining(", "));
         
-        logger.error("Violation de contrainte: {}", errorMessage);
+        logger.warn("Violation de contrainte détectée");
         
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),

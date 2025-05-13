@@ -51,8 +51,10 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
         // Log minimal pour les erreurs d'authentification
+        logger.warn("Tentative d'accès non autorisée détectée: {}", request.getRequestURI());
+        // Détails supplémentaires uniquement en mode debug
         if (logger.isDebugEnabled()) {
-            logger.debug("Erreur d'authentification: {}", authException.getMessage());
+            logger.debug("Type d'erreur: {}", authException.getClass().getSimpleName());
         }
         
         // Vérifier si l'erreur provient d'une ressource non trouvée (qui ne devrait pas être 401)

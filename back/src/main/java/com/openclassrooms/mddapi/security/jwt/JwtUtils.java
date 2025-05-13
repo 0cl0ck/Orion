@@ -94,19 +94,13 @@ public class JwtUtils {
             Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(authToken);
             return true;
         } catch (MalformedJwtException e) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Token JWT invalide: {}", e.getMessage());
-            }
+            logger.warn("Token JWT invalide - format incorrect");
         } catch (ExpiredJwtException e) {
             logger.warn("Token JWT expiré");
         } catch (UnsupportedJwtException e) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Token JWT non supporté: {}", e.getMessage());
-            }
+            logger.warn("Token JWT non supporté");
         } catch (IllegalArgumentException e) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("La chaîne de revendications JWT est vide: {}", e.getMessage());
-            }
+            logger.warn("La chaîne de revendications JWT est vide");
         }
 
         return false;
